@@ -4,9 +4,9 @@
 
 والصلاة والسلام على رسول الله، أما بعد:
 
-# أفنون: الشاشة الرئيسية لتلفاز LG
+# Islamic Launcher: الشاشة الرئيسية الإسلامية لتلفاز LG
 
-يجعل أفنون الشاشةَ الرئيسية لتلفاز LG، كما في نسخة أندرويد: يفتح وحده عند تشغيل التلفاز قبل أي مدخل HDMI، وفيه
+مبني على أفنون، ويجعله الشاشةَ الرئيسية لتلفاز LG، كما في نسخة أندرويد: يفتح وحده عند تشغيل التلفاز قبل أي مدخل HDMI، وفيه
 الصلاة القادمة والعدّ التنازلي في المحراب ومواقيت اليوم، ثم تطبيقاتك المفضلة والمزيد وكل التطبيقات.
 
 > **أفنون من إنشاء [egyjs](https://github.com/egyjs)**:
@@ -33,9 +33,9 @@
 
 ---
 
-# Afnon Launcher for LG webOS
+# Islamic Launcher for LG webOS
 
-Afnon as the Home screen of an LG TV, as on Android: it opens by itself when the TV turns on, before any HDMI
+Built on Afnon: Afnon as the Home screen of an LG TV, as on Android: it opens by itself when the TV turns on, before any HDMI
 input, with the next prayer and its countdown in the mihrab arch, today's times, then your favourite apps, more
 apps and All apps.
 
@@ -88,7 +88,7 @@ Then, from this folder:
    ```
    The TV downloads the package from your PC; Windows may ask once to let Node through its firewall.
 
-To remove it: delete `/var/lib/webosbrew/init.d/90-afnon-launcher` on the TV and uninstall **Afnon Launcher**.
+To remove it: delete `/var/lib/webosbrew/init.d/90-afnon-launcher` on the TV and uninstall **Islamic Launcher**.
 
 ## Credits
 
