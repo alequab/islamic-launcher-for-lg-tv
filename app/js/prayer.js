@@ -1,7 +1,8 @@
 /*
  * Afnon LG: prayer times, places and local time, shared by the page (window.Prayer) and the service (require).
- * Times come from adhan-js with the same methods and parameters as the Android app's adhan-java 1.2.1
- * (checked with tools/compare). ES5 only: the page runs on Chromium 68, the service on Node 8.
+ * Times come from adhan-js with the same methods and parameters as the Android app's adhan-java 1.2.1, with two
+ * rules from meypod/al-azan on top: Umm al-Qura's Isha in Ramadan and the high-latitude rule above 48°.
+ * ES5 only: the page runs on Chromium 68, the service on Node 8.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./adhan.js'));
@@ -379,6 +380,25 @@
     return p;
   }
 
+  var hijriFmt;
+  /**
+   * The Umm al-Qura month (1–12) of a calendar day (month 0-based; the day may run past the month's end). Where the
+   * engine has no Islamic calendars (Node 8's small ICU), the tabular one, at most a day off.
+   */
+  function hijriMonth(y, m, d) {
+    try {
+      if (hijriFmt === undefined) hijriFmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { timeZone: 'UTC', month: 'numeric' });
+      var parts = hijriFmt.formatToParts(new Date(Date.UTC(y, m, d, 12)));
+      for (var i = 0; i < parts.length; i++) if (parts[i].type === 'month') return parseInt(parts[i].value, 10);
+    } catch (e) { hijriFmt = null; }
+    var jd = Math.floor(Date.UTC(y, m, d) / 86400000) + 2440588;
+    var l = jd - 1948440 + 10632, n = Math.floor((l - 1) / 10631);
+    l = l - 10631 * n + 354;
+    var j = Math.floor((10985 - l) / 5316) * Math.floor((50 * l) / 17719) + Math.floor(l / 5670) * Math.floor((43 * l) / 15238);
+    l = l - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+    return Math.floor((24 * l) / 709);
+  }
+
   /** Angles for Text.methodAngles: fajr, isha and the Isha interval in minutes (0 when by angle). */
   function angles(method) {
     var p = params(method, 'shafi');
@@ -391,7 +411,17 @@
    * or Isha (Manchester in June), adhan-js's rounding keeps half a second.
    */
   function times(lat, lng, method, madhab, y, m, d) {
-    var t = new adhan.PrayerTimes(new adhan.Coordinates(lat, lng), new Date(y, m, d, 12), params(method, madhab));
+    var p = params(method, madhab);
+    // Umm al-Qura's Isha is 2 hours after Maghrib in Ramadan, not 1½ (as Saudi Arabia's calendar has it, and
+    // meypod/al-azan applies it). An evening belongs to the next Hijri day, so this starts with the first night
+    // of Ramadan (the first tarawih) and ends before the night of Eid.
+    if (method === 'UMM_AL_QURA' && hijriMonth(y, m, d + 1) === 9) p.ishaInterval = 120;
+    var co = new adhan.Coordinates(lat, lng);
+    // Where summer nights never get dark enough for Fajr's and Isha's angles (above 48°: London, Paris, Berlin…),
+    // a seventh of the night after Maghrib and before sunrise, as al-azan does, close to the mosques' timetables;
+    // adhan's default, the middle of the night, put both near 1 a.m. Below 48° nothing changes.
+    p.highLatitudeRule = adhan.HighLatitudeRule.recommended(co);
+    var t = new adhan.PrayerTimes(co, new Date(y, m, d, 12), p);
     return [t.fajr, t.sunrise, t.dhuhr, t.asr, t.maghrib, t.isha].map(function (x) {
       return Math.floor(x.getTime() / 60000) * 60000;
     });

@@ -157,10 +157,17 @@
     for (i = 0; i < 6; i++) if (i !== SUNRISE && times[i] > now) { next = i; break; }
     if (next < 0) { next = FAJR; times[FAJR] = tomorrow[FAJR]; }
     var wall = clock.wall(now);
-    var h = hijriOf(wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate() + (S.hijri | 0));
+    // The Hijri day begins at Maghrib: from then until midnight the date and weekday are the next day's (Friday
+    // evening is ليلة السبت). Ramadan follows it, so its first night has a suhoor and the night of Eid has none.
+    var eve = now >= today[MAGHRIB] ? 1 : 0;
+    var h = hijriOf(wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate() + eve + (S.hijri | 0));
+    var weekday = (wall.getUTCDay() + eve) % 7;
     return {
       times: times, nowIndex: latest === SUNRISE ? -1 : latest, nextIndex: next, nextTime: times[next],
-      suhoorEnd: today[FAJR] > now ? today[FAJR] : tomorrow[FAJR], friday: wall.getUTCDay() === 5,
+      suhoorEnd: today[FAJR] > now ? today[FAJR] : tomorrow[FAJR],
+      // Jumu'ah is the Friday noon prayer, so it follows the calendar day; Surat al-Kahf the Hijri Friday,
+      // Thursday's Maghrib to Friday's.
+      friday: wall.getUTCDay() === 5, kahf: weekday === 5, weekday: weekday,
       hijriDay: h.day, hijriMonth: h.month, hijriYear: h.year, ramadan: h.month === 8,
       qibla: P.qibla(city.lat, city.lng), wall: wall
     };
@@ -171,8 +178,10 @@
     if (day.friday) n[DHUHR] = t.jumuah();
     return n;
   }
+  /** The Hijri date with its weekday, which turns at Maghrib with it ("السبت 13 جمادى الأولى 1448 هـ"). */
   function hijriText(day) {
-    return t.d(day.hijriDay + ' ' + t.hijriMonths()[day.hijriMonth] + ' ' + day.hijriYear + t.hijriSuffix());
+    return t.d(t.weekdays()[day.weekday] + ' ' + day.hijriDay + ' ' + t.hijriMonths()[day.hijriMonth] + ' ' +
+      day.hijriYear + t.hijriSuffix());
   }
 
   // ---------------------------------------------------------------- DOM helpers
@@ -801,7 +810,7 @@
     home.playIcon = icon('play', 26, 2);
     play.appendChild(home.playIcon);
     el('span', 'gap', play);
-    home.playLabel = el('span', null, play);
+    home.playLabel = el('span', 'plbl', play);
     play._ok = radioToggle;
     var pick = home.pick = el('div', 't rbtn', btns);
     pick.appendChild(icon('radio', 26, 2));
@@ -1164,12 +1173,12 @@
     var day = home.day, a = home.arch, n = names(day);
     setTime(home.clock, now);
     setText(home.date1, hijriText(day) + t.sep() + t.city());
-    setText(home.date2, t.gregorian(clock.wall(now)));
+    setText(home.date2, t.gregorianDate(clock.wall(now)));
     var nextTime = clockText(day.nextTime);
     var label = t.nextPrayer(), name = n[day.nextIndex];
     var sub = t.adhanAt() + ' ' + nextTime + t.sep() + t.city(), sub2 = '';
     if (day.friday && day.nextIndex === DHUHR) label = t.jumuahLabel();
-    if (day.friday) sub2 = t.kahf();
+    if (day.kahf) sub2 = t.kahf();
     if (day.ramadan) {
       sub2 = t.suhoorEnds(clockText(day.suhoorEnd));
       if (day.nextIndex === MAGHRIB) {
@@ -1585,7 +1594,7 @@
 
   function renderDayMinute(now) {
     var d = day.d, a = day.arch, n = names(d);
-    setText(day.dates, hijriText(d) + t.sep() + t.gregorian(clock.wall(now)) + t.sep() + t.city());
+    setText(day.dates, hijriText(d) + t.sep() + t.gregorianDate(clock.wall(now)) + t.sep() + t.city());
     setText(a.label, d.friday && d.nextIndex === DHUHR ? t.jumuahLabel() : t.nextPrayer());
     setText(a.name, n[d.nextIndex]);
     setText(a.sub, t.methodName(method()));
@@ -2564,7 +2573,7 @@
       dream.minute = minute;
       d = dream.day = dayAt(arrived ? nowMs + 1000 : nowMs);
       setTime(dream.clock, nowMs);
-      setText(dream.date, t.d(t.weekdays()[d.wall.getUTCDay()] + t.sep() + d.hijriDay + ' ' + t.hijriMonths()[d.hijriMonth]));
+      setText(dream.date, t.d(t.weekdays()[d.weekday] + t.sep() + d.hijriDay + ' ' + t.hijriMonths()[d.hijriMonth]));
       setText(dream.next, names(d)[d.nextIndex] + ' ' + clockText(d.nextTime));
     }
     var secs = Text.secondsUntil(d.nextTime, nowMs);

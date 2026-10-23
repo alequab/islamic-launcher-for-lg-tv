@@ -165,6 +165,14 @@ svg { display: block; overflow: visible; }
 /* The radio card hangs from the Radio pill, over the dates and the prayer strip, while it is open. */
 .radio { box-sizing: border-box; padding: 30px 36px; border-radius: 24px; background: var(--lapis7); border: 2px solid var(--gold60); display: none; z-index: 2; }
 .radio.open { display: block; }
+/*
+ * The three buttons stay on one row: they were 3px wider than the 720px card, so Screen off wrapped below and
+ * jumped between the rows as the labels changed. Slimmer padding leaves ~40px to spare, and Play/Stop keeps the
+ * width of the longer word, so switching it moves nothing.
+ */
+.radio.pop .btns { display: flex; flex-wrap: nowrap; }
+.radio.pop .rbtn { flex: none; padding: 0 24px 0 20px; }
+.radio .plbl { display: inline-block; min-width: 3.4em; }
 .radio .title { font-size: 48px; line-height: 1.15; }
 .radio .status { font-size: 24px; color: var(--gold); }
 .radio .lbl { font-size: 20px; color: var(--mist); }

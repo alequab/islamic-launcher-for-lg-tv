@@ -53,7 +53,10 @@
     ['refaat', 'محمد رفعت', 'Mohammad Refaat'],
     ['abdulbasit', 'عبد الباسط عبد الصمد', 'Abdul Basit'],
     ['nuyne', 'أحمد نعينع', 'Ahmad Nuaina'],
-    ['makkah', 'الحرم المكي', 'Makkah, Al-Haram']
+    ['makkah', 'الحرم المكي', 'Makkah, Al-Haram'],
+    // From meypod/al-azan's audio (github.com/meypod/audio_files); tools/fetch-adhans.ps1 downloads them too.
+    ['nabawi', 'المسجد النبوي', 'Madinah, Al-Masjid an-Nabawi'],
+    ['ghalwash', 'راغب مصطفى غلوش', 'Ragheb Mustafa Ghalwash']
   ];
 
   root.AfnonData = { STATIONS: STATIONS, VOICES: VOICES };

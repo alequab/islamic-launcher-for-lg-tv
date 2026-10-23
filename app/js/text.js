@@ -469,6 +469,10 @@
   T.gregorian = function (wall) {
     return this.d(this.weekdays()[wall.getUTCDay()] + ' ' + wall.getUTCDate() + ' ' + this.months()[wall.getUTCMonth()] + ' ' + wall.getUTCFullYear());
   };
+  /** The Gregorian date without its weekday: the weekday goes with the Hijri date, which turns at Maghrib. */
+  T.gregorianDate = function (wall) {
+    return this.d(wall.getUTCDate() + ' ' + this.months()[wall.getUTCMonth()] + ' ' + wall.getUTCFullYear());
+  };
 
   return Text;
 });
