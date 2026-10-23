@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **Settings → Prayer times → Adjust the times** («تعديل المواقيت»), as in meypod/al-azan: Fajr, Sunrise, Dhuhr,
+  Asr, Maghrib and Isha each up to 30 minutes earlier or later, to match a mosque's timetable. Home, Prayer day,
+  the reminders and the adhan all use the adjusted times (the service gets them with the other settings).
 - Home as on Android: four favourites, a More row of five apps and an All apps tile with the count, in place of
   the radio card. Radio and network pills join Live in the header; the radio card opens from its pill.
 - All apps: five columns, three rows in view, the next prayer's chip, and an info bar with the focused app and its

@@ -410,8 +410,13 @@
    * the calendar day only, whatever the engine's own zone. Whole minutes: where the high-latitude rule sets Fajr
    * or Isha (Manchester in June), adhan-js's rounding keeps half a second.
    */
-  function times(lat, lng, method, madhab, y, m, d) {
+  function times(lat, lng, method, madhab, y, m, d, adjust) {
     var p = params(method, madhab);
+    // Minutes to add to each time (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha), to match a mosque's timetable.
+    if (adjust) {
+      p.adjustments = { fajr: adjust[0] | 0, sunrise: adjust[1] | 0, dhuhr: adjust[2] | 0, asr: adjust[3] | 0,
+        maghrib: adjust[4] | 0, isha: adjust[5] | 0 };
+    }
     // Umm al-Qura's Isha is 2 hours after Maghrib in Ramadan, not 1½ (as Saudi Arabia's calendar has it, and
     // meypod/al-azan applies it). An evening belongs to the next Hijri day, so this starts with the first night
     // of Ramadan (the first tarawih) and ends before the night of Eid.
@@ -427,11 +432,12 @@
     });
   }
 
-  /** The six times for the local day containing ms (+ days), in a clock's zone. */
+  /** The six times for the local day containing ms (+ days), in a clock's zone; s: { method, madhab, adjust }. */
   function timesFor(s, clock, ms, days) {
     var w = clock.wall(clock.dayStart(ms, days || 0) + 12 * 3600000);
     var city = clock.city;
-    return times(city.lat, city.lng, s.method || city.method, s.madhab, w.getUTCFullYear(), w.getUTCMonth(), w.getUTCDate());
+    return times(city.lat, city.lng, s.method || city.method, s.madhab, w.getUTCFullYear(), w.getUTCMonth(), w.getUTCDate(),
+      s.adjust);
   }
 
   function qibla(lat, lng) {

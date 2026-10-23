@@ -393,6 +393,30 @@
                    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   };
 
+  // ---------------------------------------------------------------- adjusting the times (Settings → Prayer times)
+
+  T.adjustRow = function () { return this.ar ? 'تعديل المواقيت' : 'Adjust the times'; };
+  T.adjustHelp = function () {
+    return this.d(this.ar ? 'لمطابقة تقويم مسجدك: كل وقت حتى 30 دقيقة قبله أو بعده'
+                          : "To match your mosque's timetable: each time up to 30 minutes earlier or later");
+  };
+  /** "2 min later" in words: Chromium 68 would put a sign on the wrong side of an Arabic line. */
+  T.adjustBy = function (n) {
+    if (!n) return this.ar ? 'دون تعديل' : 'No change';
+    var m = Math.abs(n);
+    if (!this.ar) return this.d((n > 0 ? '+' : '−') + m + ' min');
+    var mins = m === 1 ? 'دقيقة' : m === 2 ? 'دقيقتين' : this.d(m + (m <= 10 ? ' دقائق' : ' دقيقة'));
+    return (n > 0 ? 'تأخير ' : 'تقديم ') + mins;
+  };
+  /** The row's value: how many of the six times are adjusted. */
+  T.adjustCount = function (adjust) {
+    var n = 0;
+    for (var i = 0; i < 6; i++) if (adjust[i]) n++;
+    if (!n) return this.ar ? 'دون تعديل' : 'None';
+    if (!this.ar) return this.d(n + (n === 1 ? ' time' : ' times'));
+    return n === 1 ? 'وقت واحد' : n === 2 ? 'وقتان' : this.d(n + ' أوقات');
+  };
+
   // ---------------------------------------------------------------- launcher: Home's apps and All apps (Text.java)
 
   T.loadingApps = function () { return this.ar ? 'جارٍ التحميل…' : 'Loading…'; };

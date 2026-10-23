@@ -78,7 +78,9 @@
     locale: 'system', digits: '', clock: 'system', city: 'cairo', method: null, madhab: 'shafi', hijri: 0,
     facing: -1, remind: 15, remindVoice: true, announce: true, adhan: true, callClose: 10,
     bells: [1, 0, 1, 1, 1, 1], voice: 'alafasy', voiceFajr: 'chebae_fajr', station: 'nablus', radioResume: true,
-    radioDark: 0, night: false, liveQuality: 480, favs: null
+    radioDark: 0, night: false, liveQuality: 480, favs: null,
+    // Minutes added to Fajr, Sunrise, Dhuhr, Asr, Maghrib and Isha (Settings → Adjust the times).
+    adjust: [0, 0, 0, 0, 0, 0]
   };
   var S = loadSettings();
 
@@ -87,6 +89,7 @@
     try { o = JSON.parse(localStorage.getItem('afnon') || '{}') || {}; } catch (e) { o = {}; }
     for (var k in DEFAULTS) s[k] = o[k] !== undefined ? o[k] : DEFAULTS[k];
     if (!s.bells || s.bells.length !== 6) s.bells = DEFAULTS.bells.slice();
+    if (!s.adjust || s.adjust.length !== 6) s.adjust = DEFAULTS.adjust.slice();
     return s;
   }
   function saveSettings() {
@@ -155,7 +158,7 @@
 
   /** One moment's view of the day: the six times, the current and next prayer, Friday, Ramadan, the Qibla. */
   function dayAt(now) {
-    var s = { method: method(), madhab: S.madhab };
+    var s = { method: method(), madhab: S.madhab, adjust: S.adjust };
     var today = P.timesFor(s, clock, now, 0), tomorrow = P.timesFor(s, clock, now, 1);
     var times = today.slice(), latest = -1, next = -1, i;
     for (i = 0; i < 6; i++) if (times[i] <= now) latest = i;
@@ -1762,6 +1765,8 @@
       { kind: STEP, label: t.hijriAdjust, help: function () { return t.hijriToday(hijriText(dayAt(Date.now()))); },
         value: function () { return t.days(S.hijri | 0); },
         step: function (d) { S.hijri = Math.max(-2, Math.min(2, (S.hijri | 0) + d)); changed(false); } },
+      { kind: VALUE, label: t.adjustRow, help: function () { return t.adjustHelp(S.adjust); },
+        value: function () { return t.adjustCount(S.adjust); }, open: function () { chooseAdjust(0); } },
       { kind: VALUE, label: t.roomRow, help: t.roomHelp,
         value: function () { return S.facing < 0 ? t.notSet() : t.bearingLabel(S.facing); },
         open: function () { openDay(true); } }
@@ -2167,6 +2172,29 @@
     openChooser(country, found.map(function (c) { return t.ar ? c.ar : c.en; }), sel, function (i) { take(found[i]); });
     ch.back = function () { chooseCountry(r); };
   }
+  /**
+   * Adjust the times (meypod/al-azan's adjustments): the six times with their minutes, then one of them from 30
+   * minutes earlier to 30 later. After a pick, or Back, the list of times comes back for the next one; Back there
+   * closes it. Home, Prayer day, the reminders and the adhan all use the adjusted times.
+   */
+  function chooseAdjust(sel) {
+    var names = t.prayerNames();
+    openChooser(t.adjustRow(), names.map(function (n, i) { return n + t.sep() + t.adjustBy(S.adjust[i]); }), sel,
+      function (i) {
+        setTimeout(function () {
+          var vals = [];
+          for (var v = -30; v <= 30; v++) vals.push(v);
+          openChooser(names[i], vals.map(function (x) { return t.adjustBy(x); }), vals.indexOf(S.adjust[i] | 0),
+            function (k) {
+              S.adjust[i] = vals[k];
+              changed(true);
+              setTimeout(function () { chooseAdjust(i); }, 0);
+            });
+          ch.back = function () { chooseAdjust(i); };
+        }, 0);
+      });
+  }
+
   /** Station: the broadcast stations or the reciters, then one of them. Playing radio moves to it at once. */
   function chooseStation() {
     openChooser(t.stationRow(), t.stationGroups(), station().reciter ? 1 : 0, function (g) {
@@ -2752,7 +2780,7 @@
         visible: !document.hidden,
         app: APP_ID,
         settings: {
-          city: S.city, method: method(), madhab: S.madhab, bells: S.bells, adhan: S.adhan, remind: S.remind,
+          city: S.city, method: method(), madhab: S.madhab, adjust: S.adjust, bells: S.bells, adhan: S.adhan, remind: S.remind,
           remindVoice: S.remindVoice, announce: S.announce, ar: t.ar, eastern: t.eastern, h24: h24
         }
       }, function (r) {
@@ -2843,7 +2871,7 @@
     var done = [];
     list.split(',').forEach(function (kv) {
       var i = kv.indexOf(':'), k = kv.slice(0, i), v = kv.slice(i + 1);
-      if (i < 0 || !(k in DEFAULTS) || k === 'locale' || k === 'digits' || k === 'clock') return;
+      if (i < 0 || !(k in DEFAULTS) || k === 'locale' || k === 'digits' || k === 'clock' || typeof DEFAULTS[k] === 'object') return;
       var d = DEFAULTS[k];
       S[k] = typeof d === 'boolean' ? (v === '1' || v === 'true') : typeof d === 'number' ? +v : v;
       done.push(k + '=' + JSON.stringify(S[k]));
