@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Afnon</title>
+<!-- Home's faces start loading with the page, so the first screen shows sooner after the launch. -->
+<link rel="preload" href="fonts/alexandria_regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="fonts/alexandria_medium.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="fonts/amiri_bold.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="fonts/amiri_regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="css/afnon.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.8V4.5M12 19.5V22.2M1.8 12H4.5M19.5 12H22.2M4.8 4.8L6.7 6.7M17.3 17.3L19.2 19.2M4.8 19.2L6.7 17.3M17.3 6.7L19.2 4.8"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12L15.5 5.5M12 12L8.5 18.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z M10 21h4"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-mihrab" viewBox="0 0 24 24"><path d="M5 21V10c0-3 3-5 7-8 4 3 7 5 7 8v11z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path class="fill" d="M8 5L19 12L8 19Z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect class="fill" x="6.5" y="6.5" width="11" height="11" rx="2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path class="fill" d="M19.36 15.14A8 8 0 1 1 11.04 4.06A7 7 0 0 0 19.36 15.14Z"/></symbol>
+  <symbol id="i-night" viewBox="0 0 24 24"><circle cx="13.5" cy="13.5" r="7.2"/><circle class="fill" cx="11.2" cy="11.8" r="1.4"/><circle class="fill" cx="15.6" cy="16.2" r="1"/><circle class="fill" cx="16.3" cy="11" r="0.7"/><path class="fill" d="M4.8 2L5.6 4.4L8 5.2L5.6 6L4.8 8.4L4 6L1.6 5.2L4 4.4Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5V5M12 19V21.5M2.5 12H5M19 12H21.5M5.3 5.3L7 7M17 17L18.7 18.7M5.3 18.7L7 17M17 7L18.7 5.3"/></symbol>
+  <symbol id="i-live" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7"/><circle class="fill" cx="12" cy="10.5" r="2.2"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 19 0M5.8 12.6a9 9 0 0 1 12.4 0M9.1 16.1a4.3 4.3 0 0 1 5.8 0"/><circle class="fill" cx="12" cy="19.3" r="1.3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path class="fill" d="M12 2.5l2.9 6.3 6.8.7-5.1 4.6 1.5 6.7L12 17.3l-6.1 3.5 1.5-6.7-5.1-4.6 6.8-.7z"/></symbol>
+  <symbol id="i-radio"viewBox="0 0 24 24"><circle class="fill" cx="12" cy="12" r="1.8"/><path d="M15.83 8.79A5 5 0 0 1 15.83 15.21M8.17 15.21A5 5 0 0 1 8.17 8.79M18.89 6.21A9 9 0 0 1 18.89 17.79M5.11 17.79A9 9 0 0 1 5.11 6.21"/></symbol>
+</svg>
+<div id="stage"></div>
+<audio id="radioPlayer" preload="none"></audio>
+<audio id="soundPlayer" preload="none"></audio>
+<script src="js/adhan.js"></script>
+<script src="js/prayer.js"></script>
+<script src="js/text.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Built package
+output/
+
+# Sounds: the adhan recordings have no licence and the spoken lines are made with Windows' voice; copy them from
+# your Afnon for LG webOS folder. Neither is published.
+app/sounds/
+
+# Icons the boot script copies on the TV
+app/icons/
+
+# This PC's setup (paths to Node and ares-*)
+tools/env.local.ps1

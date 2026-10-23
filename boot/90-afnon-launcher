@@ -1,0 +1,122 @@
+#!/bin/sh
+# Afnon Launcher: run by Homebrew Channel at every boot (run-parts /var/lib/webosbrew/init.d).
+#  1. Lets the launcher list and open apps, read the network name and use Afnon's service (tv.afnon.lg.service,
+#     which schedules the adhan): an installed web app gets only the "public" group, which refuses all of these.
+#     Written again at every boot, since a reinstall resets it.
+#  2. Brings Afnon to the front once the TV's first app is up, and again every time the TV turns on: with
+#     Quick Start+ turning on is a wake from standby, not a boot, so this script would not run then.
+#  3. Copies the apps' icons into the launcher's folder, now and whenever an app comes or goes.
+#  4. As the TV turns off, makes Afnon its "last input", so the TV opens Afnon first when it turns on again.
+#     If an HDMI input was on screen when it went off, the TV wakes to it for about a second before Afnon.
+# Install: copy to /var/lib/webosbrew/init.d/ and chmod +x (tools/setup-tv.sh does both).
+
+APP=tv.afnon.launcher
+PERM=/var/luna-service2-dev/client-permissions.d/$APP.app.json
+WANT='{"tv.afnon.launcher-*":["public","applications","applications.internal","applications.launch","applications.query","networking.query","tv.afnon.lg.service.group"]}'
+LOG=/tmp/afnon-launcher.log
+PID=/tmp/afnon-launcher.pid
+
+log() { echo "$(date +%H:%M:%S) $*" >> $LOG; }
+
+if [ -f "$PERM" ] && [ "$(cat $PERM)" != "$WANT" ]; then
+  echo "$WANT" > $PERM
+  ls-control scan-services >/dev/null 2>&1
+  log "permissions set"
+fi
+
+# The apps' icons, copied into the launcher's own folder: a web app may not read files in other apps' folders.
+DIR=/media/developer/apps/usr/palm/applications/$APP
+icons() {
+  [ -d $DIR ] || return
+  mkdir -p $DIR/icons
+  luna-send -n 1 -f luna://com.webos.applicationManager/listLaunchPoints '{}' 2>/dev/null |
+    awk -F'"' '/^ *"id": /{id=$4} /^ *"icon": /{ic=$4} id != "" && ic != "" {print id, ic; id=""; ic=""}' |
+    while read -r id ic; do cp "$ic" "$DIR/icons/$id.png" 2>/dev/null; done
+  # The TV's own apps that its launch list leaves out (EXTRA_APPS in app.js).
+  for a in com.webos.app.livetv:assets/icon_livetv_80.png com.webos.app.hdmi1:icon.png \
+           com.webos.app.hdmi2:icon.png com.palm.app.settings:icon.png; do
+    cp "/usr/palm/applications/${a%%:*}/${a#*:}" "$DIR/icons/${a%%:*}.png" 2>/dev/null
+  done
+}
+icons
+
+# The TV opens its "last input" first when it turns on (bootd.json: firstAppInNormal = {LAST_INPUT_APP}, from the
+# setting lastInputApp; a web app like Afnon never becomes it by itself). Pointing it at Afnon each time the TV
+# goes off makes Afnon the first thing on screen, with no HDMI or Live TV before it.
+first() {
+  luna-send -n 1 luna://com.webos.settingsservice/setSystemSettings \
+    "{\"category\":\"general\",\"settings\":{\"lastInputApp\":\"$APP\"}}" >/dev/null 2>&1
+}
+
+front() {
+  luna-send -n 1 luna://com.webos.applicationManager/getForegroundAppInfo '{}' 2>/dev/null |
+    sed -n 's/.*"appId": *"\([^"]*\)".*/\1/p'
+}
+
+launch() {
+  luna-send -n 1 luna://com.webos.applicationManager/launch "{\"id\":\"$APP\"}" 2>/dev/null | grep -q '"returnValue":true'
+}
+
+# Opens Afnon at once, then for 20 s puts it back on top whenever the TV's own input apps (its last HDMI input,
+# Live TV) or its Home come up over it, as they do while the TV starts. Stops early if another app is opened.
+bring() {
+  log "bring (front: $(front))"
+  # Early in a boot the application manager may not take it yet: ask again every half second, 30 s at most.
+  i=0
+  until launch || [ $i -ge 60 ]; do usleep 500000 2>/dev/null || sleep 1; i=$((i + 1)); done
+  i=0
+  while [ $i -lt 40 ]; do
+    usleep 500000 2>/dev/null || sleep 1
+    i=$((i + 1))
+    f=$(front)
+    case "$f" in
+      "$APP"|"") ;;
+      com.webos.app.hdmi*|com.webos.app.livetv|com.webos.app.home|com.webos.app.inputcommon) log "over $f"; launch ;;
+      *) return ;;
+    esac
+  done
+}
+
+# Icons again whenever an app is installed, updated or removed (the list's subscription says so).
+watchApps() {
+  while true; do
+    luna-send -i luna://com.webos.applicationManager/listLaunchPoints '{"subscribe":true}' 2>/dev/null |
+      while read -r line; do
+        case "$line" in *'"change"'*) icons ;; esac
+      done
+    sleep 5
+  done
+}
+
+watch() {
+  first
+  watchApps &
+  # Only at boot: run again by hand (a reinstall), it leaves whatever is on screen alone.
+  [ "$(cut -d. -f1 /proc/uptime)" -lt 300 ] && bring
+  # The power state, as it changes; "Active" (not "Active Standby") is the TV turned on with its screen.
+  last=Active
+  while true; do
+    luna-send -i luna://com.webos.service.tvpower/power/getPowerState '{"subscribe":true}' 2>/dev/null |
+      while read -r line; do
+        case "$line" in
+          *'"state"'*'"Active"'*) [ "$last" = Active ] || { log "on"; bring; }; last=Active ;;
+          # Turning off ("Suspend"): Afnon becomes the last input. The launch asked for here is carried out the
+          # moment the TV wakes again (the system freezes first), so Afnon is back in front at once.
+          *'"state"'*) [ "$last" = Active ] && { log "off"; first; launch; }; last=other ;;
+        esac
+      done
+    sleep 5
+  done
+}
+
+if [ "$1" = watch ]; then
+  echo $$ > $PID
+  log "watching (pid $$)"
+  watch
+  exit 0
+fi
+
+# One watcher only, also if this script is run again by hand; in its own session, so it outlives the
+# shell that started it.
+if [ -f $PID ] && grep -q afnon-launcher "/proc/$(cat $PID)/cmdline" 2>/dev/null; then exit 0; fi
+setsid "$0" watch </dev/null >/dev/null 2>&1 &

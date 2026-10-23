@@ -1,0 +1,3 @@
+* text=auto
+# The boot script runs on the TV's shell: LF only.
+boot/* text eol=lf

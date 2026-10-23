@@ -1,0 +1,17 @@
+{
+  "id": "tv.afnon.launcher",
+  "version": "0.1.0",
+  "vendor": "Afnon",
+  "type": "web",
+  "main": "index.html",
+  "title": "Afnon Launcher",
+  "icon": "icon.png",
+  "largeIcon": "icon-large.png",
+  "bgColor": "#0C1B33",
+  "iconColor": "#0C1B33",
+  "splashColor": "#0C1B33",
+  "spinnerOnLaunch": false,
+  "noSplashOnLaunch": true,
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}
