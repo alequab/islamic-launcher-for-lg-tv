@@ -3,9 +3,16 @@
 ## [Unreleased]
 
 ### Added
-- **Settings → Prayer times → Adjust the times** («تعديل المواقيت»), as in meypod/al-azan: Fajr, Sunrise, Dhuhr,
-  Asr, Maghrib and Isha each up to 30 minutes earlier or later, to match a mosque's timetable. Home, Prayer day,
-  the reminders and the adhan all use the adjusted times (the service gets them with the other settings).
+- **Settings → Adjust the times** («تعديل المواقيت», its own section), as in meypod/al-azan: Fajr, Sunrise,
+  Dhuhr, Asr, Maghrib and Isha each on a row with − and + round the minutes («+2», «0», «-3»), up to 30 earlier
+  or later, with today's adjusted time under the name. Home, Prayer day, the reminders and the adhan all use the
+  adjusted times (the service gets them with the other settings).
+- **Settings keys, as the TCL build's fix:** the arrows only move (▲▼ through sections or rows, toward the start
+  back to the sections). OK is the only key that changes anything: a list opens, a switch flips, or a choice or
+  a stepper starts editing with a ring round it; then ◀▶ move an unsaved draft, OK saves and Back cancels.
+  «✓ تم الحفظ» shows at the end of the hint line for 2 s after each save.
+- **The Magic Remote's pointer works:** the cursor was hidden by the page's style. Hovering focuses, clicking is
+  OK; in Settings − and + and a choice's options act at once; with the radio card open only its buttons respond.
 - Home as on Android: four favourites, a More row of five apps and an All apps tile with the count, in place of
   the radio card. Radio and network pills join Live in the header; the radio card opens from its pill.
 - All apps: five columns, three rows in view, the next prayer's chip, and an info bar with the focused app and its

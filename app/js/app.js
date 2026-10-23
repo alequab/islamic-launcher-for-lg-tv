@@ -1723,7 +1723,7 @@
 
   // ---------------------------------------------------------------- Settings (SettingsActivity)
 
-  var PRAYER_S = 0, REMIND_S = 1, RADIO_S = 2, DISPLAY_S = 3, NEWS_S = 4, SECTIONS = 5;
+  var PRAYER_S = 0, ADJUST_S = 1, REMIND_S = 2, RADIO_S = 3, DISPLAY_S = 4, NEWS_S = 5, SECTIONS = 6;
   var VALUE = 0, SEG = 1, STEP = 2, TOGGLE = 3;
   var set = screens.settings = {
     section: PRAYER_S, onNav: true, rowIndex: 0,
@@ -1733,13 +1733,14 @@
       if (set.onNav) focusNav(); else if (set.section === NEWS_S) focusNews(); else focusRow(set.rowIndex);
       refreshSettings();
     },
-    hide: function () { stopPreview(); }
+    hide: function () { stopPreview(); set.editing = null; }
   };
 
   function openSettings() { set.onNav = true; show('settings'); }
 
   function sectionName(i) {
-    return [t.sectionPrayer(), t.sectionReminders(), t.sectionRadio(), t.sectionDisplay(), t.sectionNews()][i];
+    return [t.sectionPrayer(), t.sectionAdjust(), t.sectionReminders(), t.sectionRadio(), t.sectionDisplay(),
+      t.sectionNews()][i];
   }
 
   function digitsOf(a) { return a.map(function (s) { return t.d(s); }); }
@@ -1749,6 +1750,18 @@
   function rowsFor(s) {
     var REMIND = [5, 10, 15, 20, 30, 0], CLOSE = [0, 1, 5, 10], DARK = [0, 15, -1];
     if (s === NEWS_S) return [];
+    // Adjust the times (meypod/al-azan's adjustments): each of the six, − and + by a minute, -30 to 30. Home,
+    // Prayer day, the reminders and the adhan all use the adjusted times.
+    if (s === ADJUST_S) return [0, 1, 2, 3, 4, 5].map(function (i) {
+      return { kind: STEP, label: function () { return t.prayerNames()[i]; }, low: -30, high: 30, signed: true,
+        help: function () {
+          var today = P.timesFor({ method: method(), madhab: S.madhab, adjust: S.adjust }, clock, Date.now(), 0);
+          return t.adjustTimeHelp(clockText(today[i]));
+        },
+        amount: function () { return S.adjust[i] | 0; },
+        value: function (n) { return t.minutesSigned(n == null ? S.adjust[i] | 0 : n); },
+        setAmount: function (n) { S.adjust[i] = n; changed(true); } };
+    });
     if (s === PRAYER_S) return [
       { kind: VALUE, label: t.location, help: function () { return t.locationHelp(city.lat, city.lng); },
         value: function () { return t.ar ? t.place(city.ar, city.countryAr) : t.place(city.en, city.countryEn); },
@@ -1763,10 +1776,9 @@
         selected: function () { return S.madhab === 'hanafi' ? 1 : 0; },
         select: function (i) { S.madhab = i === 1 ? 'hanafi' : 'shafi'; changed(true); } },
       { kind: STEP, label: t.hijriAdjust, help: function () { return t.hijriToday(hijriText(dayAt(Date.now()))); },
-        value: function () { return t.days(S.hijri | 0); },
-        step: function (d) { S.hijri = Math.max(-2, Math.min(2, (S.hijri | 0) + d)); changed(false); } },
-      { kind: VALUE, label: t.adjustRow, help: function () { return t.adjustHelp(S.adjust); },
-        value: function () { return t.adjustCount(S.adjust); }, open: function () { chooseAdjust(0); } },
+        low: -2, high: 2, amount: function () { return S.hijri | 0; },
+        value: function (n) { return t.days(n == null ? S.hijri | 0 : n); },
+        setAmount: function (n) { S.hijri = n; changed(false); } },
       { kind: VALUE, label: t.roomRow, help: t.roomHelp,
         value: function () { return S.facing < 0 ? t.notSet() : t.bearingLabel(S.facing); },
         open: function () { openDay(true); } }
@@ -1791,7 +1803,8 @@
     ];
     if (s === RADIO_S) return [
       { kind: TOGGLE, label: function () { return t.station(station()); }, help: function () { return t.radioRowHelp(station()); },
-        on: function () { return Radio.wanted; }, set: function (b) { if (b) radioStart(); else radioStop(); } },
+        // Plays or stops the radio: an action, not a saved setting, so no ✓ Saved.
+        on: function () { return Radio.wanted; }, set: function (b) { if (b) radioStart(); else radioStop(); }, saves: false },
       { kind: VALUE, label: t.stationRow, help: function () { return t.stationGroups()[station().reciter ? 1 : 0]; },
         value: function () { return t.stationChoice(station()); }, open: chooseStation },
       { kind: SEG, label: t.afterAdhanRow, help: t.afterAdhanHelp, segs: t.afterAdhanChoices,
@@ -1884,6 +1897,8 @@
     set.label = place(el('div', 'mist caps', e), 640, 56);
     set.label.style.fontSize = '22px';
     set.hints = hintsEl(e, 640, 976);
+    // ✓ Saved: on the hint line at the rows' end edge, apart from the hints so they never shift.
+    set.saved = placeEnd(el('div', 'saved', e, t.saved()), 96, 976);
     // Every section's rows, built now and shown or hidden by section.
     set.rows = [];
     set.groups = [];
@@ -1920,30 +1935,103 @@
         return x;
       });
     } else if (r.kind === STEP) {
-      el('div', 'step', c, '−');
+      // − value + (mirrored in Arabic: + value −); the pointer presses the buttons themselves.
+      el('div', 'step', c, '−')._d = -1;
       r.val = el('div', 'stepv', c);
-      el('div', 'step', c, '+');
+      // A signed number reads left to right ("-3"), also with Eastern digits in an Arabic row.
+      if (r.signed) r.val.dir = 'ltr';
+      el('div', 'step', c, '+')._d = 1;
     } else {
       r.sw = el('div', 'sw', c);
       el('i', null, r.sw);
     }
+    r.ctl = c;
     b._focus = function () {
-      setHints(set.hints, [t.hintMove(), r.kind === VALUE ? t.hintChoose() : t.hintChange(), t.hintBackMenu()]);
+      setHints(set.hints, [t.hintMove(), r.kind === VALUE ? t.hintChoose() : r.kind === TOGGLE ? t.hintSwitch() : t.hintEdit(),
+        t.hintBackMenu()]);
     };
-    b._ok = function () { rowAction(r, KEY.OK); };
+    b._ok = function () { rowAction(r); };
     return r;
   }
 
+  /** A row as saved, or, for the row being edited, with its unsaved draft and a ring round its control. */
   function renderRow(r) {
     setText(r.lb, call(r.label));
     var help = call(r.help);
     setText(r.hp, help);
     r.hp.style.display = help ? '' : 'none';
-    if (r.kind === VALUE || r.kind === STEP) setText(r.val, call(r.value));
+    var edit = set.editing === r;
+    r.ctl.classList.toggle('editing', edit);
+    if (r.kind === VALUE) setText(r.val, call(r.value));
+    else if (r.kind === STEP) setText(r.val, r.value(edit ? set.draft : null));
     else if (r.kind === SEG) {
-      var sel = r.selected();
+      var sel = edit ? set.draft : r.selected();
       for (var i = 0; i < r.segEls.length; i++) r.segEls[i].classList.toggle('on', i === sel);
     } else r.sw.classList.toggle('on', !!r.on());
+  }
+
+  // ---------------------------------------------------------------- editing a row (the TCL build's Settings keys)
+
+  /** OK on a SEG or STEP row: ◀▶ now move an unsaved draft, OK saves it, Back cancels. */
+  function startEditing(r) {
+    set.editing = r;
+    set.draft = r.kind === SEG ? r.selected() : r.amount();
+    renderRow(r);
+    setHints(set.hints, [t.hintChange(), t.hintSave(), t.hintBackCancel()]);
+  }
+  /** Leaves editing; save keeps the draft if it differs from what is saved. */
+  function stopEditing(save) {
+    var r = set.editing;
+    set.editing = null;
+    if (save && set.draft !== (r.kind === SEG ? r.selected() : r.amount())) {
+      if (r.kind === SEG) r.select(set.draft);
+      else r.setAmount(set.draft);
+      showSaved();
+    }
+    if (!set.rows) return;
+    refreshSettings();
+    focusRow(set.rowIndex);
+    r.el._focus();
+  }
+  /** One step of the draft while editing, within the row's range. */
+  function moveDraft(d) {
+    var r = set.editing;
+    var lo = r.kind === SEG ? 0 : r.low, hi = r.kind === SEG ? r.segEls.length - 1 : r.high;
+    var to = Math.max(lo, Math.min(hi, set.draft + d));
+    if (to === set.draft) return;
+    set.draft = to;
+    renderRow(r);
+  }
+  /** ✓ Saved at the end of the hint line for 2 s (motion.saved-lifetime); a new save starts it again. */
+  function showSaved() {
+    if (!set.saved) return;
+    clearTimeout(set.savedTimer);
+    set.saved.classList.add('on');
+    set.savedTimer = setTimeout(function () { set.saved.classList.remove('on'); }, 2000);
+  }
+
+  /**
+   * The pointer on a Settings row: − or + steps and saves at once, a segment is chosen at once; anything else on
+   * the row is OK. Returns true when it handled the click.
+   */
+  function pointerSetting(target) {
+    var rows = set.rows && set.rows[set.section];
+    if (!rows) return false;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (!r.el.contains(target)) continue;
+      if (set.editing) stopEditing(false);
+      if (r.kind === STEP && target._d) {
+        var n = Math.max(r.low, Math.min(r.high, r.amount() + target._d));
+        if (n !== r.amount()) { r.setAmount(n); showSaved(); }
+      } else if (r.kind === SEG && r.segEls.indexOf(target) >= 0) {
+        var s = r.segEls.indexOf(target);
+        if (s !== r.selected()) { r.select(s); showSaved(); }
+      } else return false;
+      refreshSettings();
+      return true;
+    }
+    return false;
   }
 
   function refreshSettings() {
@@ -1995,34 +2083,39 @@
     focus(set.rows[set.section][i].el);
   }
 
-  function rowAction(r, k) {
-    var toEnd = (k === KEY.RIGHT) !== rtl, d = toEnd ? 1 : -1, ok = k === KEY.OK;
-    if (r.kind === SEG) {
-      var n = r.segEls.length, sel = r.selected();
-      var to = ok ? (sel + 1) % n : Math.max(0, Math.min(n - 1, sel + d));
-      if (to === sel) return;
-      r.select(to);
-    } else if (r.kind === STEP) {
-      if (ok) return;
-      r.step(d);
-    } else if (r.kind === TOGGLE) {
+  /**
+   * OK on a row, the only key that changes anything (the TCL build's fix): a list opens, a switch flips, a choice
+   * or a stepper starts editing.
+   */
+  function rowAction(r) {
+    if (r.kind === SEG || r.kind === STEP) return startEditing(r);
+    if (r.kind === TOGGLE) {
       r.set(!r.on());
-    } else {
-      if (ok) r.open();
-      else if (!toEnd) focusNav();
+      if (r.saves !== false) showSaved();
+      refreshSettings();
       return;
     }
-    refreshSettings();
+    r.open();
   }
 
+  /**
+   * The arrows only move: ▲▼ through the sections or the rows, toward the end (or OK) into the rows, toward the
+   * start back to the sections. While a row is edited ◀▶ move its draft, OK saves and Back cancels.
+   */
   function settingsKey(k) {
+    var toEnd = (k === KEY.RIGHT) !== rtl;
+    if (set.editing) {
+      if (k === KEY.OK) stopEditing(true);
+      else if (k === KEY.BACK) stopEditing(false);
+      else if (k === KEY.LEFT || k === KEY.RIGHT) moveDraft(toEnd ? 1 : -1);
+      return;
+    }
     if (k === KEY.BACK) {
       if (set.onNav) show('home');
       else focusNav();
       return;
     }
     var vertical = k === KEY.UP || k === KEY.DOWN, up = k === KEY.UP ? -1 : 1;
-    var toEnd = (k === KEY.RIGHT) !== rtl;
     if (set.onNav) {
       if (vertical) {
         var to = set.section + up;
@@ -2043,7 +2136,8 @@
       if (r >= 0 && r < rows.length) focusRow(r);
       return;
     }
-    rowAction(rows[set.rowIndex], k);
+    if (k === KEY.OK) rowAction(rows[set.rowIndex]);
+    else if (!toEnd && (k === KEY.LEFT || k === KEY.RIGHT)) focusNav();
   }
 
   // ---------------------------------------------------------------- the list chooser (cities, methods, voices…)
@@ -2119,7 +2213,12 @@
     var back = ch.returnTo, pick = ch.pick;
     ch.pick = null;
     focus(back);
-    if (picked != null && pick) pick(picked);
+    if (picked != null && pick) {
+      pick(picked);
+      // A list in Settings saves what was picked; one that leads to another list (region, then country) opens it
+      // first, in its own timeout, and saves only at the last one.
+      setTimeout(function () { if (screen === set && !ch.on) showSaved(); }, 0);
+    }
     if (screen === set) refreshSettings();
   }
 
@@ -2171,28 +2270,6 @@
     found.forEach(function (c, i) { if (c.id === city.id) sel = i; });
     openChooser(country, found.map(function (c) { return t.ar ? c.ar : c.en; }), sel, function (i) { take(found[i]); });
     ch.back = function () { chooseCountry(r); };
-  }
-  /**
-   * Adjust the times (meypod/al-azan's adjustments): the six times with their minutes, then one of them from 30
-   * minutes earlier to 30 later. After a pick, or Back, the list of times comes back for the next one; Back there
-   * closes it. Home, Prayer day, the reminders and the adhan all use the adjusted times.
-   */
-  function chooseAdjust(sel) {
-    var names = t.prayerNames();
-    openChooser(t.adjustRow(), names.map(function (n, i) { return n + t.sep() + t.adjustBy(S.adjust[i]); }), sel,
-      function (i) {
-        setTimeout(function () {
-          var vals = [];
-          for (var v = -30; v <= 30; v++) vals.push(v);
-          openChooser(names[i], vals.map(function (x) { return t.adjustBy(x); }), vals.indexOf(S.adjust[i] | 0),
-            function (k) {
-              S.adjust[i] = vals[k];
-              changed(true);
-              setTimeout(function () { chooseAdjust(i); }, 0);
-            });
-          ch.back = function () { chooseAdjust(i); };
-        }, 0);
-      });
   }
 
   /** Station: the broadcast stations or the reciters, then one of them. Playing radio moves to it at once. */
@@ -2713,6 +2790,9 @@
     if (!x || x === stage || x === cur) return;
     if (ch.on && x.parentNode !== ch.list) return;
     if (day.picker && day.picker.on) return;
+    // With the radio card open, only its buttons; while a Settings row is edited, nothing else.
+    if (screen === home && home.rcOpen && home.cardBtns.indexOf(x) < 0) return;
+    if (screen === set && set.editing) return;
     if (screen === set) {
       for (var s = 0; s < SECTIONS; s++) if (set.nav[s] === x) { if (set.section !== s) showSection(s); return focusNav(); }
       var rows = set.rows[set.section];
@@ -2721,7 +2801,13 @@
     }
     if (x.offsetParent) focus(x);
   });
-  stage.addEventListener('click', function () { if (cur) key(KEY.OK); });
+  stage.addEventListener('click', function (e) {
+    lastInput = Date.now();
+    if (wake()) return;
+    // Settings: − / + and a choice's segments act at once under the pointer.
+    if (screen === set && !ch.on && pointerSetting(e.target)) return;
+    if (cur) key(KEY.OK);
+  });
 
   // ---------------------------------------------------------------- leaving and coming back
 

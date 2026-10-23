@@ -395,27 +395,20 @@
 
   // ---------------------------------------------------------------- adjusting the times (Settings → Prayer times)
 
-  T.adjustRow = function () { return this.ar ? 'تعديل المواقيت' : 'Adjust the times'; };
-  T.adjustHelp = function () {
-    return this.d(this.ar ? 'لمطابقة تقويم مسجدك: كل وقت حتى 30 دقيقة قبله أو بعده'
-                          : "To match your mosque's timetable: each time up to 30 minutes earlier or later");
+  T.sectionAdjust = function () { return this.ar ? 'تعديل المواقيت' : 'Adjust the times'; };
+  /** A time's adjustment between its − and + buttons: "+2", "0", "-3" (minutes). */
+  T.minutesSigned = function (n) { return this.d(n > 0 ? '+' + n : String(n)); };
+  /** Under each time's name: what it is today with the adjustment, and what the buttons do. */
+  T.adjustTimeHelp = function (time) {
+    return this.d(this.ar ? 'اليوم ' + time + ' · بالدقائق، حتى 30 قبله أو بعده'
+                          : 'Today ' + time + ' · in minutes, up to 30 earlier or later');
   };
-  /** "2 min later" in words: Chromium 68 would put a sign on the wrong side of an Arabic line. */
-  T.adjustBy = function (n) {
-    if (!n) return this.ar ? 'دون تعديل' : 'No change';
-    var m = Math.abs(n);
-    if (!this.ar) return this.d((n > 0 ? '+' : '−') + m + ' min');
-    var mins = m === 1 ? 'دقيقة' : m === 2 ? 'دقيقتين' : this.d(m + (m <= 10 ? ' دقائق' : ' دقيقة'));
-    return (n > 0 ? 'تأخير ' : 'تقديم ') + mins;
-  };
-  /** The row's value: how many of the six times are adjusted. */
-  T.adjustCount = function (adjust) {
-    var n = 0;
-    for (var i = 0; i < 6; i++) if (adjust[i]) n++;
-    if (!n) return this.ar ? 'دون تعديل' : 'None';
-    if (!this.ar) return this.d(n + (n === 1 ? ' time' : ' times'));
-    return n === 1 ? 'وقت واحد' : n === 2 ? 'وقتان' : this.d(n + ' أوقات');
-  };
+  // Settings keys (the TCL build's fix): the arrows only move, OK edits, then OK saves or Back cancels.
+  T.hintEdit = function () { return this.ar ? 'OK  تعديل' : 'OK  Edit'; };
+  T.hintSwitch = function () { return this.ar ? 'OK  تشغيل/إيقاف' : 'OK  On/Off'; };
+  T.hintSave = function () { return this.ar ? 'OK  حفظ' : 'OK  Save'; };
+  T.hintBackCancel = function () { return this.ar ? 'رجوع  إلغاء' : 'Back  Cancel'; };
+  T.saved = function () { return this.ar ? '✓  تم الحفظ' : '✓  Saved'; };
 
   // ---------------------------------------------------------------- launcher: Home's apps and All apps (Text.java)
 
