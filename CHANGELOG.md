@@ -15,7 +15,7 @@
 - `tools/install-tv.ps1`: package, install over Homebrew Channel's telnet, put the boot script in place.
 
 ### Changed
-- The project is called **Islamic Launcher** (the app's title on the TV too); it is built on Afnon.
+- The project is called **Islamic Launcher for LG TV** (the app's title on the TV too); it is built on Afnon.
 - No grey loading screen when the launcher opens (`spinnerOnLaunch`, `noSplashOnLaunch`), and the first screen
   waits 1.5 s at most for its fonts.
 - Back on Home no longer closes Afnon: it is the Home screen.
