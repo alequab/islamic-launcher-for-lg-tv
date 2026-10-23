@@ -15,6 +15,10 @@
 - `tools/install-tv.ps1`: package, install over Homebrew Channel's telnet, put the boot script in place.
 
 ### Changed
+- **The call to prayer opens in the launcher,** not in the Afnon app, so the launcher's own adhan voice and call
+  settings are used. Afnon's service opens whichever app names itself to it (the launcher does on every message).
+  When the call closes, the TV goes back to what was on screen (an HDMI input, YouTube…): the service notes it,
+  with a permission the boot script grants. The launcher never closes itself after a call.
 - The project is called **Islamic Launcher for LG TV** (the app's title on the TV too); it is built on Afnon.
 - No grey loading screen when the launcher opens (`spinnerOnLaunch`, `noSplashOnLaunch`), and the first screen
   waits 1.5 s at most for its fonts.

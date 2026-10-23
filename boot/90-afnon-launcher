@@ -2,7 +2,8 @@
 # Afnon Launcher: run by Homebrew Channel at every boot (run-parts /var/lib/webosbrew/init.d).
 #  1. Lets the launcher list and open apps, read the network name and use Afnon's service (tv.afnon.lg.service,
 #     which schedules the adhan): an installed web app gets only the "public" group, which refuses all of these.
-#     Written again at every boot, since a reinstall resets it.
+#     Written again at every boot and after any install, since a reinstall resets it. The service may also see
+#     which app is on screen, so after the adhan the launcher goes back to it.
 #  2. Brings Afnon to the front once the TV's first app is up, and again every time the TV turns on: with
 #     Quick Start+ turning on is a wake from standby, not a boot, so this script would not run then.
 #  3. Copies the apps' icons into the launcher's folder, now and whenever an app comes or goes.
@@ -18,11 +19,19 @@ PID=/tmp/afnon-launcher.pid
 
 log() { echo "$(date +%H:%M:%S) $*" >> $LOG; }
 
-if [ -f "$PERM" ] && [ "$(cat $PERM)" != "$WANT" ]; then
-  echo "$WANT" > $PERM
-  ls-control scan-services >/dev/null 2>&1
-  log "permissions set"
-fi
+# Afnon's service may also see which app is on screen when the adhan comes, so the launcher goes back to it
+# after the call (an HDMI input, YouTube…).
+SPERM=/var/luna-service2-dev/client-permissions.d/tv.afnon.lg.service.service.json
+# (getForegroundAppInfo is in "applications.internal", not "applications.query".)
+SWANT='{"tv.afnon.lg.service*":["public","applications.internal"]}'
+
+perms() {
+  changed=
+  if [ -f "$PERM" ] && [ "$(cat $PERM)" != "$WANT" ]; then echo "$WANT" > $PERM; changed=1; fi
+  if [ -f "$SPERM" ] && [ "$(cat $SPERM)" != "$SWANT" ]; then echo "$SWANT" > $SPERM; changed=1; fi
+  [ -n "$changed" ] && { ls-control scan-services >/dev/null 2>&1; log "permissions set"; }
+}
+perms
 
 # The apps' icons, copied into the launcher's own folder: a web app may not read files in other apps' folders.
 DIR=/media/developer/apps/usr/palm/applications/$APP
@@ -82,7 +91,8 @@ watchApps() {
   while true; do
     luna-send -i luna://com.webos.applicationManager/listLaunchPoints '{"subscribe":true}' 2>/dev/null |
       while read -r line; do
-        case "$line" in *'"change"'*) icons ;; esac
+        # A reinstall of either app also resets its permissions.
+        case "$line" in *'"change"'*) perms; icons ;; esac
       done
     sleep 5
   done

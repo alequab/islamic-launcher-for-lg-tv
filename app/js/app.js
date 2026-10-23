@@ -15,6 +15,11 @@
   var P = window.Prayer, Text = window.Text, DATA = window.AfnonData;
   var TV = typeof window.PalmServiceBridge === 'function' || typeof window.PalmServiceBridge === 'object';
   var SVC = 'luna://tv.afnon.lg.service/';
+  /**
+   * Named to the service in every message, so it opens this app, not the Afnon app, for the call to prayer: the
+   * adhan voice and the call's other settings are then the launcher's own.
+   */
+  var APP_ID = 'tv.afnon.launcher';
   var SVG = 'http://www.w3.org/2000/svg', XLINK = 'http://www.w3.org/1999/xlink';
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, OK: 13, BACK: 461 };
   var FAJR = 0, SUNRISE = 1, DHUHR = 2, ASR = 3, MAGHRIB = 4;
@@ -2260,15 +2265,19 @@
     var ctx = now.ctx;
     if (!ctx) return;
     now.ctx = null;
-    note('call closes after ' + Math.round((Date.now() - ctx.opened) / 1000) + ' s' + (leave ? (ctx.cold ? ', Afnon closes' : ctx.hidden ? ', back behind' : '') : ', Afnon left'));
+    note('call closes after ' + Math.round((Date.now() - ctx.opened) / 1000) + ' s' + (leave ? (ctx.from ? ', back to ' + ctx.from : ctx.cold || ctx.hidden ? ', back behind' : '') : ', Afnon left'));
     clearTimeout(ctx.timer);
     stopAdhan();
     if (ctx.radioHeld) radioResume(S.radioResume);
     if (!leave) return;
-    if (ctx.cold) { exitApp(); return; }
     show(ctx.prev ? nameOf(ctx.prev) : 'home');
     if (ctx.prevFocus && ctx.prev) focus(ctx.prevFocus);
-    if (ctx.hidden) toBackground();
+    // Opened for the call over another app or input: back to it, by name when the service saw which it was. The
+    // service's word counts even when the page thought it was in front (webOS brings it forward before the page
+    // hears the launch), and stepping back from a call that started the launcher would land on LG's Home bar.
+    // The launcher never closes itself, so it is ready the next time (the Afnon app closed here).
+    if (ctx.from) launchApp(ctx.from);
+    else if (ctx.hidden || ctx.cold) toBackground();
   }
   function closeCall() { endCall(true); }
 
@@ -2276,7 +2285,6 @@
   function leaveCall() {
     var ctx = now.ctx;
     endCall(false);
-    if (ctx.cold) { exitApp(); return; }
     show(ctx.prev ? nameOf(ctx.prev) : 'home');
     if (ctx.prevFocus && ctx.prev) focus(ctx.prevFocus);
   }
@@ -2693,15 +2701,6 @@
     luna(SVC + 'visible', { visible: false });
     if (PS.platformBack) PS.platformBack();
   }
-  function exitApp() {
-    liveStop();
-    radioStop();
-    stopSound();
-    var done = false;
-    function close() { if (!done) { done = true; window.close(); } }
-    luna(SVC + 'visible', { visible: false }, close);
-    setTimeout(close, 400);
-  }
 
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) {
@@ -2739,7 +2738,7 @@
     var key = v + '|' + h;
     if (!force && key === told) return;
     told = key;
-    luna(SVC + 'visible', { visible: v, home: h });
+    luna(SVC + 'visible', { visible: v, home: h, app: APP_ID });
   }
 
   // ---------------------------------------------------------------- the service
@@ -2751,6 +2750,7 @@
     configTimer = setTimeout(function () {
       luna(SVC + 'configure', {
         visible: !document.hidden,
+        app: APP_ID,
         settings: {
           city: S.city, method: method(), madhab: S.madhab, bells: S.bells, adhan: S.adhan, remind: S.remind,
           remindVoice: S.remindVoice, announce: S.announce, ar: t.ar, eastern: t.eastern, h24: h24
@@ -2797,7 +2797,7 @@
     if (p.call != null && p.call !== '') {
       var hidden = relaunch && document.hidden;
       if (PS.activate) PS.activate();
-      openCall(+p.call, +p.time || Date.now(), { cold: !relaunch, hidden: hidden, test: +p.test === 1 });
+      openCall(+p.call, +p.time || Date.now(), { cold: !relaunch, hidden: hidden, test: +p.test === 1, from: p.from || '' });
       return;
     }
     if (p.open === 'day') openDay();
