@@ -6,7 +6,7 @@
 - On Friday the spoken lines use Dhuhr's recordings («حان الآن موعد صلاة الظهر» in Lutfi Khamis's voice) instead
   of the old computer voice's Jumu'ah lines, until Jumu'ah is recorded in the same voice (`JUMUAH_CLIPS`).
 - The spoken reminder before a prayer says «حان الآن موعد صلاة …» in Lutfi Khamis's voice, in place of the old
-  computer voice's «اقترب موعد صلاة …», until that line is recorded in his voice (`BEFORE_AS_NOW`).
+  computer voice's «اقترب موعد صلاة …» (`BEFORE_AS_NOW`).
 
 ## [1.2.0] - 2026-10-30
 
