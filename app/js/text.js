@@ -185,6 +185,10 @@
 
   T.back = function () { return this.ar ? 'رجوع' : 'Back'; };
   T.cancel = function () { return this.ar ? 'إلغاء' : 'Cancel'; };
+  // Back on Home a second time: the open apps.
+  T.openApps = function () { return this.ar ? 'التطبيقات المفتوحة' : 'Open apps'; };
+  T.closeAll = function () { return this.ar ? 'إغلاق الكل' : 'Close all'; };
+  T.noOpenApps = function () { return this.ar ? 'لا توجد تطبيقات مفتوحة' : 'No apps are open'; };
   T.hintOpen = function () { return this.ar ? 'OK  فتح' : 'OK  Open'; };
 
   // Prayer day

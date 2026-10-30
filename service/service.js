@@ -33,7 +33,8 @@ const CHAIN = 'afnon-next', TEST = 'afnon-test';
 /** An event this late (the TV was off or asleep and Quick Start+ resumed it) is skipped. */
 const LATE_MS = 180000;
 /** How long the page's "I'm in front" stays believable without being repeated (it repeats once a minute). */
-const PAGE_FRESH_MS = 180000;
+// (90 s, was 3 min: a page closed by an install or by the TV kept the reminders quiet for up to 3 min.)
+const PAGE_FRESH_MS = 90000;
 /** File names by prayer index; Sunrise has none. On Friday, Dhuhr is "jumuah" (Announce.java). */
 const CLIPS = ['fajr', null, 'dhuhr', 'asr', 'maghrib', 'isha'];
 

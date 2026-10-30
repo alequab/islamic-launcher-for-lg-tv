@@ -36,6 +36,11 @@
 - **اليوم الهجري يبدأ من المغرب:** ومعه رمضان، وسورة الكهف من مغرب الخميس، والجمعة حتى مغربها.
 - **إذاعات القرآن الكريم والقرّاء،** و**البث المباشر من مكة المكرمة والمدينة المنورة** بدقة 1080p بضغطة واحدة.
 - **الوضع الليلي** لكل الشاشات، حتى أيقونات التطبيقات.
+- **الشاشة الرئيسية للتلفاز:** زر Home يفتح المشغّل بدل شريط LG، والضغط على «رجوع» في الرئيسية يعرض التطبيقات
+  المفتوحة لإغلاقها واحدًا واحدًا أو كلها.
+- **إيقاف إعلانات LG وتتبّعها:** ما دام المشغّل هو الشاشة الرئيسية لا تعمل خدمات إعلانات LG ولا تتبّع المشاهدة
+  (LivePlus) ولا سجلات الإرسال ولا الاقتراحات، فتتوفر ذاكرة أكثر للتلفاز. كل ذلك في الذاكرة فقط، وإعادة التشغيل بدون
+  سكربت الإقلاع تعيد التلفاز كما كان.
 - **يتحدّث وحده** من إصدارات هذا المستودع مرة في اليوم.
 - **لا حسابات ولا إعلانات ولا تتبّع.**
 
@@ -75,8 +80,12 @@
 
 **إن كان عندك تطبيق أفنون القديم** (`tv.afnon.lg`) فاحذفه بعد التحديث، وإلا رُفع الأذان مرتين.
 
-**لإزالته:** احذف `/var/lib/webosbrew/init.d/90-afnon-launcher` و`/var/lib/afnon-launcher` من التلفاز، ثم احذف
-تطبيق **Islamic Launcher for LG TV**.
+**لإرجاع شاشة LG الرئيسية** حتى إعادة التشغيل التالية: `/var/lib/webosbrew/init.d/90-afnon-launcher lg-home`، ولإبقائها
+دائمًا: `touch /var/lib/afnon-launcher/no-home`. ولإبقاء خدمات LG تعمل مع بقاء المشغّل شاشةً رئيسية:
+`touch /var/lib/afnon-launcher/no-debloat`.
+
+**لإزالته:** شغّل أمر `lg-home` السابق، واحذف `/var/lib/webosbrew/init.d/90-afnon-launcher` و`/var/lib/afnon-launcher`
+من التلفاز، ثم احذف تطبيق **Islamic Launcher for LG TV** وأعد تشغيل التلفاز.
 
 </div>
 
@@ -130,6 +139,10 @@ Works on LG TVs with webOS 5 or newer, **rooted** with [Homebrew Channel](https:
   with Screen off while listening.
 - **Night mode** on every screen, app icons dimmed too.
 - **Arabic and English**, Western or Eastern digits, 12 or 24 hours.
+- **The TV's Home:** the Home key opens the launcher (no LG bar), and Back on Home lists the open apps to close
+  them, one or all.
+- **LG's ads and tracking off:** while the launcher is Home, LG's ad services, viewing tracking (LivePlus),
+  telemetry logs and suggestions don't run, which also frees memory on these small TVs.
 - **Updates itself** from this repository's releases, once a day.
 - **The remote:** the arrows and OK do everything; with a Magic Remote the pointer works too.
 - **No accounts, ads or tracking.** Only the radio, the live video and the daily update check use the internet.
@@ -147,13 +160,28 @@ webOS doesn't let an app become the Home screen or list other apps, so a small b
    on it.
 4. Checks this repository's latest release once a day and installs it when it's newer, keeping the TV's adhan
    recordings, which releases don't carry.
+5. Makes the launcher the TV's Home. LG's Home on webOS 5 is a native program (`/usr/bin/com.webos.app.home`); a
+   small stand-in script is bind-mounted over it, so whenever the TV opens Home (the Home key, the end of an app)
+   the stand-in opens the launcher. If the stand-in isn't running within 30 s, LG's Home comes back by itself.
+6. While the launcher is Home, a minute after boot: do-nothing stubs are bind-mounted over `admanager`,
+   `adoverlay-service`, `acr2` (LivePlus) and `sportsalarm`; `remotelogger`, `service-logger`, `contentminer` and
+   `nudge` are stopped; and LG's ad servers go to 127.0.0.1 in a RAM copy of `/etc/hosts`. LG's own Home needs the
+   ad services, so giving Home back to LG lifts this first.
+
+Steps 5 and 6 are mounts in RAM: nothing on the TV's disk changes, and a restart without the boot script (or
+Homebrew Channel's failsafe mode) leaves the TV as it was. The idea and the list of services come from
+[lasharor/cleanyourtv-WebOS](https://github.com/lasharor/cleanyourtv-WebOS) (MIT); the code here is this
+project's own. On the TV's root shell:
+
+- `/var/lib/webosbrew/init.d/90-afnon-launcher lg-home`: LG's Home (and its services) back until the next restart.
+- `touch /var/lib/afnon-launcher/no-home`: keep LG's Home at every restart (then there's no clean-up either).
+- `touch /var/lib/afnon-launcher/no-debloat`: keep the launcher as Home but leave LG's services alone.
 
 The adhan, reminders and spoken lines come on time from the launcher's own background service
 (`service/`, from Afnon for LG webOS's): a web page can't run while it is closed or behind another app, so the
 service schedules each one with the TV's Activity Manager and opens the launcher for the call. If the TV's clock
 isn't set yet after a power cut, Home says «جارٍ ضبط الوقت…» instead of times until it is; the boot script sets
-the clock within seconds from the date of an HTTPS answer, without waiting for LG's time server. The Home button
-still opens LG's own Home bar.
+the clock within seconds from the date of an HTTPS answer, without waiting for LG's time server.
 
 <a id="rooting"></a>
 ## Rooting
@@ -189,8 +217,9 @@ Then, from this folder:
 From then on the TV updates itself. To check for an update at once, on the TV's root shell:
 `/var/lib/webosbrew/init.d/90-afnon-launcher update`.
 
-To remove it: delete `/var/lib/webosbrew/init.d/90-afnon-launcher` and `/var/lib/afnon-launcher` on the TV and
-uninstall **Islamic Launcher for LG TV**.
+To remove it: run `/var/lib/webosbrew/init.d/90-afnon-launcher lg-home`, delete
+`/var/lib/webosbrew/init.d/90-afnon-launcher` and `/var/lib/afnon-launcher` on the TV, uninstall **Islamic Launcher
+for LG TV**, and restart the TV.
 
 **Coming from the launcher's first version,** which used the Afnon for LG webOS app's service: once the launcher is
 updated, uninstall that app (Homebrew Channel or `appInstallService/dev/remove`), or both would call the adhan.

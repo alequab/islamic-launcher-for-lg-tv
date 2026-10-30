@@ -13,7 +13,13 @@
 #     between), and this script with it. The releases carry no adhan or voice recordings (they have no licence),
 #     so the launcher's sounds are kept aside and put back after every install.
 # Install: copy to /var/lib/webosbrew/init.d/ and chmod +x (tools/install-tv.ps1 does both).
-# By hand: `90-afnon-launcher update` checks for an update now.
+#  6. Becomes the TV's Home: a stand-in is mounted (in RAM) over LG's Home program, so the Home key and the end
+#     of every app open the launcher, with no LG bar. LG's Home comes back by itself if the stand-in fails.
+#  7. While it is Home, keeps LG's ads, viewing tracking (LivePlus), telemetry logs and suggestions from running
+#     (do-nothing stubs mounted in RAM, ad servers in a RAM copy of /etc/hosts). Nothing on disk is changed: a
+#     restart without this script leaves the TV as it was. Ideas from lasharor's cleanyourtv-WebOS (MIT).
+# By hand: `90-afnon-launcher update` checks for an update now; `90-afnon-launcher lg-home` gives Home back to LG
+# until the next restart (touch /var/lib/afnon-launcher/no-home to keep it so; no-debloat for the clean-up).
 
 APP=tv.afnon.launcher
 PERM=/var/luna-service2-dev/client-permissions.d/$APP.app.json
@@ -183,6 +189,110 @@ update() {
   rm -f $new
 }
 
+# ---------------------------------------------------------------- Home and the clean-up
+
+# LG's Home on webOS 5 is a native program (its appinfo "type": "native"). The stand-in is mounted over it: the app
+# manager starts it whenever Home is launched (the Home key, the end of an app), it opens the launcher and stays,
+# registered as Home, so a Home key while it runs (a "relaunch") opens the launcher again.
+HOMEAPP=/usr/palm/applications/com.webos.app.home/appinfo.json
+HOMEEXE=/usr/bin/com.webos.app.home
+STANDIN=$KEEP/home-standin
+standin() {
+  cat > $STANDIN <<'EOF'
+#!/bin/sh
+# Islamic Launcher's stand-in for LG's Home program (mounted over it in RAM by 90-afnon-launcher).
+APP=tv.afnon.launcher
+log() { echo "$(date +%H:%M:%S) home stand-in: $*" >> /tmp/afnon-launcher.log; }
+for p in $(pgrep -f "^/bin/sh $0"); do [ "$p" != $$ ] && kill "$p" 2>/dev/null; done
+pkill -f "[l]una-send -i -a com.webos.app.home" 2>/dev/null
+show() {
+  luna-send -n 1 -w 8000 luna://com.webos.applicationManager/launch "{\"id\":\"$APP\"}" </dev/null 2>/dev/null |
+    grep -q '"returnValue": *true' && log "launcher opened ($1)" || log "launcher did not open ($1)"
+}
+show start
+for m in registerApp registerNativeApp; do
+  luna-send -i -a com.webos.app.home "luna://com.webos.applicationManager/$m" '{}' </dev/null 2>&1 | while read -r line; do
+    case "$line" in
+      *'"event"'*relaunch*) show "Home key" ;;
+      *'"event"'*close*) kill $$ 2>/dev/null; exit 0 ;;
+      *'"returnValue"'*false*) log "$m refused" ;;
+    esac
+  done
+done
+# Not registered: the app manager starts this again on the Home key, which opens the launcher the same way.
+while :; do sleep 60; done
+EOF
+  chmod 755 $STANDIN
+}
+isHome() { grep -q " $HOMEEXE " /proc/mounts; }
+
+takeHome() {
+  [ -f $KEEP/no-home ] && { log "Home: left to LG (no-home)"; return 1; }
+  isHome && return 0
+  grep -q '"type": *"native"' $HOMEAPP 2>/dev/null && [ -f $HOMEEXE ] || { log "Home: LG's Home is not a native program here; left to LG"; return 1; }
+  standin
+  mount --bind $STANDIN $HOMEEXE || { log "Home: the mount failed"; return 1; }
+  # LG's Home running now is its own program: stopped once; from now on the app manager starts the stand-in.
+  for p in $(pgrep -f "^$HOMEEXE"); do kill "$p" 2>/dev/null; done
+  log "Home: the launcher is Home"
+  # The stand-in must be running within 30 s (it starts on the next Home launch, asked for here), or LG's Home
+  # comes back until the next restart.
+  ( sleep 3
+    luna-send -n 1 -w 10000 luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null 2>&1
+    i=0
+    until pgrep -f "^/bin/sh $HOMEEXE" >/dev/null || [ $i -ge 15 ]; do sleep 2; i=$((i + 1)); done
+    pgrep -f "^/bin/sh $HOMEEXE" >/dev/null || { log "Home: the stand-in did not start"; lgHome; } ) &
+  return 0
+}
+
+# LG's Home back until the next restart (the clean-up is lifted first: LG's Home needs the ad services).
+lgHome() {
+  clean undo
+  isHome || return 0
+  # The stand-in first: while it runs from the mount, the mount is busy.
+  i=0
+  while isHome && [ $i -lt 5 ]; do
+    for p in $(pgrep -f "^/bin/sh $HOMEEXE"); do kill "$p" 2>/dev/null; done
+    pkill -f "[l]una-send -i -a com.webos.app.home" 2>/dev/null
+    sleep 1
+    umount $HOMEEXE 2>/dev/null
+    i=$((i + 1))
+  done
+  isHome && { log "Home: the stand-in could not be removed (it goes at the next restart)"; return 1; }
+  luna-send -n 1 -w 10000 luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null 2>&1
+  log "Home: LG's Home is back"
+}
+
+# The clean-up ($1 = undo lifts it). Programs the TV starts when it wants them get a do-nothing stub mounted over
+# them; services that run all the time are stopped; the ad servers go to 127.0.0.1 in a RAM copy of /etc/hosts.
+STUB=$KEEP/stub
+BLOCK='admanager adoverlay-service acr2 sportsalarm'
+UNITS='remotelogger service-logger contentminer nudge'
+ADS='eic.ads.lgtvcommon.com nl.ad.lgsmartad.com nl.info.lgsmartad.com'
+clean() {
+  if [ "$1" = undo ]; then
+    for b in $BLOCK; do grep -q " /usr/sbin/$b " /proc/mounts && umount /usr/sbin/$b; done
+    grep -q ' /etc/hosts ' /proc/mounts && umount /etc/hosts
+    for u in $UNITS; do systemctl --no-block start $u.service >/dev/null 2>&1; done
+    return 0
+  fi
+  [ -f $KEEP/no-debloat ] && return 0
+  printf '#!/bin/sh\nexit 0\n' > $STUB; chmod 755 $STUB
+  for b in $BLOCK; do
+    [ -f /usr/sbin/$b ] || continue
+    grep -q " /usr/sbin/$b " /proc/mounts || mount --bind $STUB /usr/sbin/$b
+    pkill -9 -f "^/usr/sbin/$b"
+  done
+  # --no-block: contentminer can take a minute to stop.
+  for u in $UNITS; do systemctl --no-block stop $u.service >/dev/null 2>&1; done
+  if ! grep -q 'afnon-launcher' /etc/hosts; then
+    cp /etc/hosts /tmp/afnon-hosts &&
+      { echo "127.0.0.1 $ADS # afnon-launcher"; echo "::1 $ADS # afnon-launcher"; } >> /tmp/afnon-hosts &&
+      mount --bind /tmp/afnon-hosts /etc/hosts
+  fi
+  log "clean-up: LG's ads, LivePlus, telemetry and suggestions stopped"
+}
+
 # Icons (and sounds and permissions) again whenever an app is installed, updated or removed (the list's
 # subscription says so).
 watchApps() {
@@ -210,6 +320,8 @@ watchClose() {
 
 watch() {
   first
+  # Home, then the clean-up a minute later, once the TV has settled (only while the launcher is Home).
+  takeHome && ( sleep 60; isHome && clean ) &
   watchClose &
   valid || { log "clock not set"; clock & }
   watchApps &
@@ -232,6 +344,11 @@ watch() {
     sleep 5
   done
 }
+
+if [ "$1" = lg-home ]; then
+  lgHome
+  exit 0
+fi
 
 if [ "$1" = update ]; then
   update now

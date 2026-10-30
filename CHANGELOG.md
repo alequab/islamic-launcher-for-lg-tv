@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added
+- **The launcher is the TV's Home:** a stand-in is bind-mounted (in RAM) over LG's Home program, so the Home key
+  and the end of every app open the launcher, with no LG bar. LG's Home comes back by itself if the stand-in isn't
+  running within 30 s; `90-afnon-launcher lg-home` gives it back until the next restart, `no-home` for good.
+- **LG's ads, LivePlus, telemetry and suggestions off** while the launcher is Home (stubs mounted in RAM over
+  their programs, services stopped, ad servers in a RAM copy of /etc/hosts); `no-debloat` leaves them alone.
+- **Back on Home** (a second time, with focus on the arch) lists the open apps: «إغلاق الكل» or one by one.
+  These three are ideas from lasharor's cleanyourtv-WebOS (MIT), written anew here.
+
+### Fixed
+- **Reminders that never came:** when the page started or came back just after a reminder's moment (an update
+  restarting it), it took the reminder as already given, while the service had left it to the page; and after
+  the reminder minutes were changed (10 → 5) the same prayer's reminder was still taken as given. The same for the
+  end-of-time warning and «حان الآن». The service also believes the page's "I'm in front" for 90 s, not 3 min.
+
 ### Changed
 - Settings → What's new lists the launcher's own releases (1.0.0 to 1.1.1) instead of the Afnon app's, each
   headed «الإصدار …» / "Version …".

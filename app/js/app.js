@@ -933,6 +933,34 @@
     });
   }
 
+  /**
+   * Back on Home, a second time: the open apps, to close them (as LG's Home lists its recent apps; the idea is
+   * cleanyourtv's). «Close all» first, then each app by name; OK closes, Back leaves. Only apps of the app list.
+   */
+  function openRunning() {
+    var got = function (ids) {
+      var apps = [];
+      ids.forEach(function (id) { var a = appById(id); if (a && !HIDDEN_IDS[id]) apps.push(a); });
+      if (!apps.length) { setHints(home.hints, [t.noOpenApps()]); return; }
+      var names = [t.closeAll()].concat(apps.map(appName));
+      openChooser(t.openApps(), names, -1, function (i) {
+        var close = i === 0 ? apps : [apps[i - 1]];
+        close.forEach(function (a) {
+          luna('luna://com.webos.applicationManager/closeByAppId', { id: a.id }, function (r) {
+            if (!r.returnValue) note('close failed: ' + a.id + ' ' + (r.errorText || ''));
+          });
+        });
+        // One closed and others still open: the list again (the app manager's own list lags, so it is not reread).
+        if (i > 0 && apps.length > 1) setTimeout(function () { got(ids.filter(function (id) { return id !== apps[i - 1].id; })); }, 300);
+      });
+    };
+    if (!TV) return got(STUB_APPS.slice(0, 3).map(function (a) { return a[0]; }));
+    luna('luna://com.webos.applicationManager/running', {}, function (r) {
+      if (!r.returnValue) { note('running apps denied: ' + (r.errorText || '')); return; }
+      got((r.running || []).map(function (x) { return x.id; }));
+    });
+  }
+
   /** "Favourites first, in their saved order; then the rest by name in the screen's language" (Apps.sorted). */
   function sortedApps() {
     var favs = savedFavs(), out = [], rest = [];
@@ -1264,9 +1292,11 @@
       return;
     }
     if (k === KEY.BACK) {
-      // Back stops the live video, then returns focus to the arch. Afnon is the Home screen: it never leaves.
+      // Back stops the live video, then returns focus to the arch, then lists the open apps to close them. Afnon is
+      // the Home screen: it never leaves.
       if (Live.place >= 0) { liveStop(); focus(home.foot); }
       else if (cur !== home.foot) focus(home.foot);
+      else openRunning();
       return;
     }
     if (k === KEY.OK) { if (cur && cur._ok) cur._ok(); return; }
@@ -1897,6 +1927,8 @@
     derive();
     home.lastMinute = -1;
     day.lastMinute = -1;
+    watch.day = null;
+    watchRearm(Date.now());
     if (service) configureService();
     styleRadio();
   }
@@ -2474,12 +2506,22 @@
     }
     return r;
   }
+  // A reminder that began less than this before the page started or came back is still the page's to give: the
+  // service, which fires a few seconds late, may have left it to the page (it thought Afnon was on Home).
+  var ARM_GRACE_MS = 30000;
   function watchArm(nowMs) {
     var r = due(nowMs), d = watch.day;
     if (r.call >= 0) watch.called = r.call + ':' + d.times[r.call];
-    if (r.announce >= 0) watch.announced = r.announce + ':' + d.times[r.announce];
-    if (r.remind) watch.reminded = d.nextIndex + ':' + d.nextTime;
-    if (r.end) watch.ended = r.end.prayer + ':' + r.end.time;
+    if (r.announce >= 0 && nowMs - d.times[r.announce] > ARM_GRACE_MS) watch.announced = r.announce + ':' + d.times[r.announce];
+    if (r.remind && nowMs - (d.nextTime - S.remind * 60000) > ARM_GRACE_MS) watch.reminded = d.nextIndex + ':' + d.nextTime;
+    if (r.end && nowMs - (r.end.time - S.endRemind * 60000) > ARM_GRACE_MS) watch.ended = r.end.prayer + ':' + r.end.time;
+  }
+  /** After a settings change: a reminder that is not due with the new minutes may come again (5 → 10 → 5). */
+  function watchRearm(nowMs) {
+    var r = due(nowMs);
+    if (!r.remind) watch.reminded = '';
+    if (!r.end) watch.ended = '';
+    if (r.announce < 0) watch.announced = '';
   }
   function watchTick(nowMs) {
     var r = due(nowMs), d = watch.day, key;
