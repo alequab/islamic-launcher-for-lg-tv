@@ -10,3 +10,10 @@ app/icons/
 
 # This PC's setup (paths to Node and ares-*)
 tools/env.local.ps1
+
+# Copies of app/js made when packaging, and what the service keeps on the TV
+service/adhan.js
+service/prayer.js
+service/text.js
+service/state.json
+service/announce/

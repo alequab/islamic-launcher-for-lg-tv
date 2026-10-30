@@ -7,17 +7,18 @@
  * Rules for this TV (webOS 5, Chromium 68, ~320 MB free): ES5 only; every screen is built once, the first time
  * it opens, and then shown or hidden; the countdown changes one text node a second; only transform and opacity
  * animate. Focus is a class ("f") moved by our own D-pad map, as on Android (FocusMap.dc.html, swapped in RTL).
- * The service (tv.afnon.lg.service) does everything that must happen while the page is closed.
+ * The launcher's own service (tv.afnon.launcher.service) does everything that must happen while the page is closed.
  */
 (function () {
   'use strict';
 
   var P = window.Prayer, Text = window.Text, DATA = window.AfnonData;
   var TV = typeof window.PalmServiceBridge === 'function' || typeof window.PalmServiceBridge === 'object';
-  var SVC = 'luna://tv.afnon.lg.service/';
+  /** The launcher's own service (service/), which keeps the adhan and reminders on time while the page is away. */
+  var SVC = 'luna://tv.afnon.launcher.service/';
   /**
-   * Named to the service in every message, so it opens this app, not the Afnon app, for the call to prayer: the
-   * adhan voice and the call's other settings are then the launcher's own.
+   * Named to the service in every message, so it opens this app for the call to prayer (the service once served
+   * the Afnon app too): the adhan voice and the call's other settings are the launcher's own.
    */
   var APP_ID = 'tv.afnon.launcher';
   var SVG = 'http://www.w3.org/2000/svg', XLINK = 'http://www.w3.org/1999/xlink';
@@ -714,7 +715,7 @@
     el('span', null, foot, t.today());
     foot._ok = function () { openDay(); };
 
-    var when = place(el('div', 'col', e), 760, 56);
+    var when = place(el('div', 'col when', e), 760, 56);
     home.clock = timeEl(when, 'clock disp num tnum');
     // Under the clock the Hijri date (with the city) first, then the Gregorian, smaller and in mist.
     home.date1 = el('div', null, when);
@@ -920,8 +921,12 @@
     { id: 'com.webos.app.livetv', title: 'Live TV' }, { id: 'com.webos.app.hdmi1', title: 'HDMI 1' },
     { id: 'com.webos.app.hdmi2', title: 'HDMI 2' }, { id: 'com.palm.app.settings', title: 'Settings' }
   ];
-  var STUB_APPS = ['YouTube', 'MBC Shahid', 'Web Browser', 'Live TV', 'HDMI 1', 'Photo & Video', 'Music', 'Settings',
-    'LG Content Store', 'Homebrew Channel', 'Facebook Watch', 'TV Cast', 'Fruit Ninja', 'Home Dashboard', 'Sports Alert'];
+  /** The browser preview's apps (and the website's demo): the TV's usual ones, with their real ids. */
+  var STUB_APPS = [['youtube.leanback.v4', 'YouTube'], ['net.mbc.shahid-lgapp', 'MBC Shahid'],
+    ['com.webos.app.browser', 'Web Browser'], ['com.webos.app.livetv', 'Live TV'], ['com.webos.app.hdmi1', 'HDMI 1'],
+    ['com.webos.app.hdmi2', 'HDMI 2'], ['com.webos.app.photovideo', 'Photo & Video'], ['com.webos.app.music', 'Music'],
+    ['com.palm.app.settings', 'Settings'], ['com.webos.app.discovery', 'LG Content Store'],
+    ['org.webosbrew.hbchannel', 'Homebrew Channel'], ['de.2kit.castbrowserlg', 'TV Cast']];
 
   function launchApp(id, params) {
     luna('luna://com.webos.applicationManager/launch', params ? { id: id, params: params } : { id: id }, function (r) {
@@ -985,7 +990,8 @@
   }
   function letter(box, a) {
     box.classList.add('mono');
-    el('span', null, box, a ? appName(a).charAt(0).toUpperCase() : '');
+    // The name's first letter, after «ال» (التلفاز → ت).
+    el('span', null, box, a ? appName(a).replace(/^ال(?=.)/, '').charAt(0).toUpperCase() : '');
   }
 
   // ---------------------------------------------------------------- Home's favourites and More rows
@@ -1075,7 +1081,7 @@
    * the front; the screens are rebuilt only if something changed.
    */
   function loadApps() {
-    if (!TV) return setTimeout(function () { gotApps(STUB_APPS.map(function (n, i) { return { id: 'stub.' + i, title: n }; })); }, 200);
+    if (!TV) return setTimeout(function () { gotApps(STUB_APPS.map(function (a) { return { id: a[0], title: a[1] }; })); }, 200);
     luna('luna://com.webos.applicationManager/listLaunchPoints', {}, function (r) {
       if (!r.returnValue || !r.launchPoints) {
         note('app list denied: ' + (r.errorText || JSON.stringify(r).slice(0, 120)));
@@ -2753,11 +2759,66 @@
 
   // ---------------------------------------------------------------- the clock
 
+  /**
+   * Whether the TV's clock is set. After a power cut the TV starts with a wrong date (1 January) until LG's time
+   * server answers, sometimes minutes later, and the launcher opens before that: it showed the wrong next prayer
+   * (Fajr) until its next once-a-minute look. Now, while the clock isn't set (getSystemTime's timeValid), Home
+   * says so instead of times and nothing is called or spoken; the moment it is set, or jumps, everything is
+   * worked out again and the service is told, so it reschedules the adhan.
+   */
+  var Time = { valid: true, lastTick: 0 };
+  function lunaSubscribe(uri, params, cb) {
+    if (!TV) return;
+    var b = new PalmServiceBridge();
+    Time.bridge = b;   // kept, or the subscription would end with it
+    b.onservicecallback = function (m) { try { cb(JSON.parse(m)); } catch (e) { /* not JSON */ } };
+    b.call(uri, JSON.stringify(params));
+  }
+  lunaSubscribe('luna://com.palm.systemservice/time/getSystemTime', { subscribe: true }, function (r) {
+    if (r.timeValid === undefined) return;
+    var valid = r.timeValid !== false;
+    if (valid === Time.valid) return;
+    Time.valid = valid;
+    note('clock ' + (valid ? 'set: ' + new Date().toISOString() : 'not set yet'));
+    clockChanged();
+  });
+  /** The clock was set or jumped: the day, the watch and the service's schedule from the new time. */
+  function clockChanged() {
+    home.lastMinute = -1;
+    home.day = null;
+    watch.day = null;
+    day.lastMinute = -1;
+    watchArm(Date.now());
+    if (Time.valid) configureService(500);
+    tick(true);
+  }
+
   var tickTimer = 0, toldMinute = -1;
   function tick(force) {
     clearTimeout(tickTimer);
-    if (document.hidden) return;
+    if (document.hidden) { Time.lastTick = 0; return; }
     var nowMs = Date.now();
+    // A jump of more than a minute between seconds: the clock was set (or changed by hand).
+    if (Time.lastTick && Math.abs(nowMs - Time.lastTick - 1000) > 60000) {
+      note('clock jumped ' + Math.round((nowMs - Time.lastTick) / 1000) + ' s');
+      Time.lastTick = nowMs;
+      return clockChanged();
+    }
+    Time.lastTick = nowMs;
+    // Until the clock is set: no times on Home, nothing called or spoken.
+    home.el && home.el.classList.toggle('notime', !Time.valid);
+    if (!Time.valid) {
+      if (screen === home && home.arch) {
+        setText(home.arch.label, t.settingTime());
+        setText(home.arch.name, '');
+        setText(home.arch.count, '');
+        setText(home.arch.sub, '');
+        home.arch.sub2.style.display = 'none';
+        home.lastMinute = -1;
+      }
+      tickTimer = setTimeout(tick, 1000);
+      return;
+    }
     if (Math.floor(nowMs / 60000) !== toldMinute) { toldMinute = Math.floor(nowMs / 60000); tellService(true); }
     // Under the black or dim screen the screen beneath is left alone; it catches up when it shows again.
     if (dream.on) renderDream(nowMs);
@@ -2786,7 +2847,8 @@
     if (offv.on || dream.on) { e.preventDefault(); wake(); return; }
     if (k !== KEY.LEFT && k !== KEY.RIGHT && k !== KEY.UP && k !== KEY.DOWN && k !== KEY.OK && k !== KEY.BACK) return;
     e.preventDefault();
-    if (k === KEY.OK && e.repeat) return;
+    // Held keys repeat: OK and Back act once, so holding Back does not run back through every screen to Home.
+    if ((k === KEY.OK || k === KEY.BACK) && e.repeat) return;
     // On an app in All apps, OK acts when it is let go: held for HOLD_MS it opens the arrange list instead.
     if (k === KEY.OK && screen === allv && !ch.on && cur && cur._app && cur.classList.contains('alltile')) {
       var x = cur;
@@ -2922,7 +2984,8 @@
   // ---------------------------------------------------------------- launch params and test hooks
 
   /**
-   * ares-launch --device lg tv.afnon.lg -p key=value …
+   * Launch params (luna-send … applicationManager/launch '{"id":"tv.afnon.launcher","params":{…}}', or the
+   * address in a browser):
    *   call=<index> time=<ms>          (from the service) the call screen
    *   test=call|reminder|announce|voice  the service fires it through the Activity Manager after `seconds`
    *                                    (8 by default; prayer=<index>, clip=<name>, mtype=<type> optional;
@@ -3144,6 +3207,6 @@
     memNote('first screen ' + readyMs + ' ms after the page started, fonts ' + (fontsMs || '?') + ' ms; zone ' + zone +
       ' ' + (-new Date().getTimezoneOffset()) + ' min, ' + (clock.useDevice ? 'the TV\'s' : 'the city\'s (' + city.zone + ')') + ' clock');
   }, 3000);
-  window.afnon = { key: key, show: show, openCall: openCall, showReminder: showReminder, S: S, radio: Radio,
+  window.afnon = { key: key, show: show, openCall: openCall, showReminder: showReminder, S: S, radio: Radio, time: Time,
     showDream: showDream, screenOff: screenOff, drift: drift };
 })();

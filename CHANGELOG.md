@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed
+- **Standalone:** the launcher has its own service (`service/`, `tv.afnon.launcher.service`) for the adhan, the
+  reminders and going back to the app or input after the call; the Afnon webOS app is no longer needed.
+- **The Home key opens the launcher:** the TV's own Home bar is put back behind it as soon as it comes up.
+- Holding Back or OK acts once; held Back no longer runs back through every screen.
+- The demo apps in the screenshots are real TV apps; app tiles take their letter after «ال».
+- README: the Homebrew Channel and how to root (SlopBro, cani.rootmy.tv).
+
+### Fixed
+- **After a power cut** the TV starts with its clock not set (1 January) and LG's time server can take minutes:
+  the launcher hides the times until the clock is set, and the boot script now sets it within seconds from the
+  date of an HTTPS answer. The launcher also recalculates when the clock jumps.
+- Settings lists: a chosen item below the focused one no longer covers its ring.
+
 ## [1.0.0] - 2026-10-30
 
 The first release.

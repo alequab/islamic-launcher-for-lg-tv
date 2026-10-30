@@ -1,5 +1,5 @@
-# Packages Afnon Launcher and installs it on a rooted LG TV (Homebrew Channel's root telnet on port 23), then
-# puts the boot script in place and opens the launcher. Run from anywhere:
+# Packages Islamic Launcher (the app and its service) and installs it on a rooted LG TV (Homebrew Channel's root
+# telnet on port 23), then puts the boot script in place and opens the launcher. Run from anywhere:
 #   powershell -ExecutionPolicy Bypass -File tools\install-tv.ps1 -Tv 192.168.0.102
 # Needs Node.js and ares-package (npm install -g @webos-tools/cli). The TV downloads the package from this PC,
 # so both must be on the same network and Windows may ask to let Node through its firewall once.
@@ -15,7 +15,15 @@ if (-not $NoPackage) {
     Push-Location $root
     New-Item -ItemType Directory -Force output | Out-Null
     Remove-Item output\*.ipk -ErrorAction SilentlyContinue
-    ares-package.cmd app -o output --no-minify 2>&1 | Where-Object { $_ -match 'Create|Success|rror' }
+    # The service shares the app's prayer times, texts and adhan-js: copied in, not kept twice in git.
+    Copy-Item app\js\adhan.js, app\js\prayer.js, app\js\text.js service\ -Force
+    Remove-Item service\state.json -ErrorAction SilentlyContinue
+    # The service can't read the app's folder on the TV: it carries its own spoken lines.
+    if (Test-Path app\sounds\announce) {
+        New-Item -ItemType Directory -Force service\announce | Out-Null
+        Copy-Item app\sounds\announce\*.wav service\announce\ -Force
+    }
+    ares-package.cmd app service -o output --no-minify 2>&1 | Where-Object { $_ -match 'Create|Success|rror' }
     Pop-Location
 }
 $ipk = Get-ChildItem (Join-Path $root 'output\*.ipk') | Select-Object -First 1
@@ -46,6 +54,7 @@ chmod +x /var/lib/webosbrew/init.d/90-afnon-launcher
 # The new script's watcher replaces the old one.
 pkill -f init.d/90-afnon-launcher; pkill -f 'luna-send -i luna://com.webos.applicationManager/listLaunchPoints'
 pkill -f 'luna-send -i luna://com.webos.service.tvpower/power/getPowerState'
+pkill -f 'luna-send -i luna://com.webos.applicationManager/getAppLifeEvents'
 /var/lib/webosbrew/init.d/90-afnon-launcher
 luna-send -n 1 luna://com.webos.applicationManager/closeByAppId '{"id":"tv.afnon.launcher"}' >/dev/null
 sleep 2

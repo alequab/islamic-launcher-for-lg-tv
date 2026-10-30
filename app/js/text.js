@@ -405,6 +405,8 @@
 
   // ---------------------------------------------------------------- adjusting the times (Settings → Prayer times)
 
+  /** Home while the TV's clock isn't set yet (after a power cut, until LG's time server answers). */
+  T.settingTime = function () { return this.ar ? 'جارٍ ضبط الوقت…' : 'Setting the time…'; };
   T.sectionAdjust = function () { return this.ar ? 'تعديل المواقيت' : 'Adjust the times'; };
   /** A time's adjustment between its − and + buttons: "+2", "0", "-3" (minutes). */
   T.minutesSigned = function (n) { return this.d(n > 0 ? '+' + n : String(n)); };

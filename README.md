@@ -18,7 +18,8 @@
 > [egyjs/afnon-android-tv-launcher](https://github.com/egyjs/afnon-android-tv-launcher). التصميم والمزايا منه،
 > وهذا المستودع ينقلها إلى تلفازات LG بالرخصة نفسها (MIT). شكرًا لـ egyjs.
 
-يعمل على تلفازات LG بنظام webOS 5 فأحدث، **بعد الروت** (Homebrew Channel).
+يعمل على تلفازات LG بنظام webOS 5 فأحدث، **بعد الروت** ([Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)،
+والروت بأداة [SlopBro](https://github.com/throwaway96/slopbro))، ولا يحتاج أي تطبيق آخر.
 
 ## المزايا
 
@@ -58,7 +59,8 @@ radio and live Makkah and Madinah, then your favourite apps, more apps and All a
 > [egyjs/afnon-android-tv-launcher](https://github.com/egyjs/afnon-android-tv-launcher). The design and the
 > features come from egyjs's Afnon; this repository brings them to LG TVs under the same MIT licence.
 
-Works on LG TVs with webOS 5 or newer, **rooted** with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel).
+Works on LG TVs with webOS 5 or newer, **rooted** with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)
+(see [Rooting](#rooting)). One app, nothing else to install.
 
 ## Screens
 
@@ -111,24 +113,37 @@ webOS doesn't let an app become the Home screen or list other apps, so a small b
 4. Checks this repository's latest release once a day and installs it when it's newer, keeping the TV's adhan
    recordings, which releases don't carry.
 
-The adhan and reminders are scheduled by the service of [Afnon for LG webOS](https://github.com/alequab/afnon-webos),
-so that app must be installed too; the launcher tells it which app to open for the call. The Home button still
+The adhan, reminders and spoken lines come on time from the launcher's own background service
+(`service/`, from Afnon for LG webOS's): a web page can't run while it is closed or behind another app, so the
+service schedules each one with the TV's Activity Manager and opens the launcher for the call. If the TV's clock
+isn't set yet after a power cut, Home says «جارٍ ضبط الوقت…» instead of times until it is. The Home button still
 opens LG's own Home bar.
+
+<a id="rooting"></a>
+## Rooting
+
+The launcher needs root, through [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel) (0.7.3 was
+used): its boot scripts (`/var/lib/webosbrew/init.d`) and its root telnet. To root a TV, see
+[rootmy.tv / cani.rootmy.tv](https://cani.rootmy.tv) for what works on your model and firmware. For webOS 5 TVs
+whose firmware the older exploits no longer reach, [SlopBro](https://github.com/throwaway96/slopbro) (the jsserver
+exploit) is what was used here; it installs Homebrew Channel. Rooting is at your own risk: follow each tool's own
+instructions and warnings.
 
 <a id="install"></a>
 ## Install
 
 You need:
 
-- An LG TV with webOS 5 or newer, rooted, with Homebrew Channel and its root telnet on (the default).
-- [Afnon for LG webOS](https://github.com/alequab/afnon-webos) installed first: its service schedules the adhan
-  and reminders.
+- An LG TV with webOS 5 or newer, rooted, with Homebrew Channel and its root telnet on (the default; see
+  [Rooting](#rooting)).
 - A Windows PC on the same network with [Node.js](https://nodejs.org) and LG's tools: `npm install -g @webos-tools/cli`.
 
 Then, from this folder:
 
-1. Copy `app/sounds` from your Afnon for LG webOS folder (after its `tools\fetch-adhans.ps1`); without it the adhan
-   is silent. Updates keep these files on the TV.
+1. Put the adhan recordings in `app/sounds/adhan` and the spoken lines in `app/sounds/announce`. They aren't in
+   the repo (no licence): [Afnon for LG webOS](https://github.com/alequab/afnon-webos)'s `tools\fetch-adhans.ps1`
+   downloads the adhans and its `tools\make-voice.ps1` records the lines; copy its `app\sounds` here. Without them
+   the adhan is silent. Updates keep these files on the TV.
 2. Package and install, with the boot script:
    ```powershell
    powershell -ExecutionPolicy Bypass -File tools\install-tv.ps1 -Tv <TV IP>
@@ -140,6 +155,9 @@ From then on the TV updates itself. To check for an update at once, on the TV's 
 
 To remove it: delete `/var/lib/webosbrew/init.d/90-afnon-launcher` and `/var/lib/afnon-launcher` on the TV and
 uninstall **Islamic Launcher for LG TV**.
+
+**Coming from the launcher's first version,** which used the Afnon for LG webOS app's service: once the launcher is
+updated, uninstall that app (Homebrew Channel or `appInstallService/dev/remove`), or both would call the adhan.
 
 ## Releasing
 
@@ -162,6 +180,7 @@ publishes it to the `gh-pages` branch, which GitHub Pages serves.
 
 ```
 app/                  the launcher (a webOS web app: index.html, js/, css/, fonts/)
+service/              its background service (Node): the adhan, reminders and spoken lines on time
   js/app.js           every screen: Home, All apps, Prayer day, Settings, the call, radio, live
   js/prayer.js        prayer times (adhan-js), the 192 cities, time zones
   js/text.js          every string in Arabic and English

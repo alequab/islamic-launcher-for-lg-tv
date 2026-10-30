@@ -1,9 +1,9 @@
 #!/bin/sh
 # Afnon Launcher: run by Homebrew Channel at every boot (run-parts /var/lib/webosbrew/init.d).
-#  1. Lets the launcher list and open apps, read the network name and use Afnon's service (tv.afnon.lg.service,
-#     which schedules the adhan): an installed web app gets only the "public" group, which refuses all of these.
-#     Written again at every boot and after any install, since a reinstall resets it. The service may also see
-#     which app is on screen, so after the adhan the launcher goes back to it.
+#  1. Lets the launcher list and open apps, read the network name and use its own service
+#     (tv.afnon.launcher.service, which schedules the adhan): an installed web app gets only the "public" group,
+#     which refuses all of these. Written again at every boot and after any install, since a reinstall resets it.
+#     The service may also see which app is on screen, so after the adhan the launcher goes back to it.
 #  2. Brings Afnon to the front once the TV's first app is up, and again every time the TV turns on: with
 #     Quick Start+ turning on is a wake from standby, not a boot, so this script would not run then.
 #  3. Copies the apps' icons into the launcher's folder, now and whenever an app comes or goes.
@@ -17,17 +17,17 @@
 
 APP=tv.afnon.launcher
 PERM=/var/luna-service2-dev/client-permissions.d/$APP.app.json
-WANT='{"tv.afnon.launcher-*":["public","applications","applications.internal","applications.launch","applications.query","networking.query","tv.afnon.lg.service.group"]}'
+WANT='{"tv.afnon.launcher-*":["public","applications","applications.internal","applications.launch","applications.query","networking.query","tv.afnon.launcher.service.group"]}'
 LOG=/tmp/afnon-launcher.log
 PID=/tmp/afnon-launcher.pid
 
 log() { echo "$(date +%H:%M:%S) $*" >> $LOG; }
 
-# Afnon's service may also see which app is on screen when the adhan comes, so the launcher goes back to it
+# The launcher's service may also see which app is on screen when the adhan comes, so the launcher goes back to it
 # after the call (an HDMI input, YouTube…).
-SPERM=/var/luna-service2-dev/client-permissions.d/tv.afnon.lg.service.service.json
+SPERM=/var/luna-service2-dev/client-permissions.d/tv.afnon.launcher.service.service.json
 # (getForegroundAppInfo is in "applications.internal", not "applications.query".)
-SWANT='{"tv.afnon.lg.service*":["public","applications.internal"]}'
+SWANT='{"tv.afnon.launcher.service*":["public","applications.internal"]}'
 
 perms() {
   changed=
@@ -90,6 +90,30 @@ bring() {
   done
 }
 
+# After a power cut the TV starts at 1 January with its clock "not set", and LG's own time server (sdp) can take
+# minutes to answer while the TV starts. The launcher hides the prayer times until then, so the clock is set from
+# the Date of an HTTPS answer as soon as the network is up; LG's server corrects it later by a second or two.
+valid() {
+  luna-send -n 1 luna://com.palm.systemservice/time/getSystemTime '{}' 2>/dev/null | grep -q '"timeValid": *true'
+}
+clock() {
+  i=0
+  while [ $i -lt 180 ] && ! valid; do
+    for h in https://api.github.com https://www.google.com; do
+      d=$(curl -sI -m 5 $h 2>/dev/null | sed -n 's/^[Dd]ate: *//p' | tr -d '\r')
+      u=$(date -u -D "%a, %d %b %Y %H:%M:%S GMT" -d "$d" +%s 2>/dev/null)
+      # Only a sane date (after 2024): a captive page could answer anything.
+      if [ -n "$u" ] && [ "$u" -gt 1704067200 ]; then
+        valid && return
+        luna-send -n 1 luna://com.palm.systemservice/clock/setTime "{\"source\":\"sdp\",\"utc\":$u}" 2>/dev/null |
+          grep -q '"returnValue": *true' && log "clock set from $h: $d"
+        return
+      fi
+    done
+    sleep 2; i=$((i + 1))
+  done
+}
+
 # ---------------------------------------------------------------- sounds and updates
 
 KEEP=/var/lib/afnon-launcher
@@ -99,12 +123,17 @@ mkdir -p $KEEP
 # The adhans and spoken lines live in the app's folder, which an install replaces: a copy is kept aside (when the
 # app has more of them than the copy) and put back when they are gone.
 count() { ls "$1" 2>/dev/null | wc -l; }
+# The service runs sealed off from the app's folder, so it has its own copy of the spoken lines.
+SVCDIR=/media/developer/apps/usr/palm/services/$APP.service
 sounds() {
   [ -d $DIR ] || return
   if [ "$(count $DIR/sounds/adhan)" -gt "$(count $KEEP/sounds/adhan)" ]; then
     rm -rf $KEEP/sounds && cp -r $DIR/sounds $KEEP/sounds && log "sounds kept"
   elif [ "$(count $DIR/sounds/adhan)" -eq 0 ] && [ "$(count $KEEP/sounds/adhan)" -gt 0 ]; then
     rm -rf $DIR/sounds && cp -r $KEEP/sounds $DIR/sounds && log "sounds put back"
+  fi
+  if [ -d $SVCDIR ] && [ "$(count $SVCDIR/announce)" -lt "$(count $DIR/sounds/announce)" ]; then
+    rm -rf $SVCDIR/announce && cp -r $DIR/sounds/announce $SVCDIR/announce && log "service's spoken lines put back"
   fi
 }
 sounds
@@ -167,8 +196,26 @@ watchApps() {
   done
 }
 
+# The Home key: the TV opens its own Home (the bar of apps that slides up) as an app. Opening the launcher
+# right then hides that bar again, so Home always brings the launcher, as on the TCL.
+watchHome() {
+  while true; do
+    luna-send -i luna://com.webos.applicationManager/getAppLifeEvents '{"subscribe":true}' 2>/dev/null |
+      while read -r line; do
+        case "$line" in
+          # On "foreground", not "launch": opened before the bar is up, the launcher ends up under it.
+          *'"event":"foreground"'*'"appId":"com.webos.app.home"'*) launch ;;
+          *'"event":"close"'*"\"appId\":\"$APP\""*) log "closed: $line" ;;
+        esac
+      done
+    sleep 5
+  done
+}
+
 watch() {
   first
+  watchHome &
+  valid || { log "clock not set"; clock & }
   watchApps &
   # Updates: a first look 2 minutes after the start, then every hour (update() itself keeps to once a day).
   ( sleep 120; while true; do update; sleep 3600; done ) &

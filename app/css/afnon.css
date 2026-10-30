@@ -201,6 +201,8 @@ svg { display: block; overflow: visible; }
 .moretile.alltile { background: transparent; border: 2px dashed var(--line-mid); white-space: pre-line; padding: 16px 12px; }
 .moretile.alltile .nm { max-height: none; font-size: 21px; }
 #home.living .approw { display: none; }
+/* Until the TV's clock is set (after a power cut): no clock, dates or prayer times, which would be wrong. */
+#home.notime .when, #home.notime .cell { visibility: hidden; }
 
 /* An app's icon: the TV's picture, or its first letter on a tile. Night mode: dimmer and a little warm. */
 .appicon { flex: none; display: flex; align-items: center; justify-content: center; }
@@ -378,7 +380,9 @@ html.night .appicon img { filter: brightness(0.6) sepia(0.25); }
 .chooser .view { position: relative; margin: 10px -10px 0; padding: 10px; overflow: hidden; }
 .chooser .list { position: relative; transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
 .item { position: relative; height: 68px; border-radius: 14px; padding: 0 24px; display: flex; align-items: center; font-size: 26px; margin-bottom: 6px; }
-.item::after { border-radius: 24px; }
+/* The ring sits in the 6px gap, and the focused item above its neighbours, so a chosen item below never covers it. */
+.item::after { border-radius: 20px; top: -5px; left: -5px; right: -5px; bottom: -5px; }
+.item.f { z-index: 1; }
 .item.chosen { background: var(--lapis7); color: var(--gold); font-weight: 500; }
 
 /* ---------------------------------------------------------------- screen off and the dim screen */
