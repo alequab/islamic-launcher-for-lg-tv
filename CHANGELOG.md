@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-30
+
 ### Changed
 - The Home key opens LG's own Home bar again, as before 1.1.0: putting the launcher over it showed the bar for
   a moment first. The boot script still notes in its log when the TV closes the launcher.
