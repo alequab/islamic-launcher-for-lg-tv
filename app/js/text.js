@@ -229,9 +229,9 @@
   T.sectionReminders = function () { return this.ar ? 'التنبيهات والأذان' : 'Reminders & adhan'; };
   T.sectionDisplay = function () { return this.ar ? 'العرض واللغة' : 'Display & language'; };
   T.sectionNews = function () { return this.ar ? 'ما الجديد' : "What's new"; };
-  /** A release's heading on the What's new page: «أفنون 0.2.0» / "Afnon 0.2.0", in the chosen digits. */
+  /** A release's heading on the What's new page: «الإصدار 1.1.1» / "Version 1.1.1", in the chosen digits. */
   T.newsVersion = function (version) {
-    return (this.ar ? 'أفنون ' : 'Afnon ') + (this.eastern ? this.d(version).replace(/\./g, '٫') : version);
+    return (this.ar ? 'الإصدار ' : 'Version ') + (this.eastern ? this.d(version).replace(/\./g, '٫') : version);
   };
   /**
    * Settings → What's new, newest release first: each group is a version (its heading, newsVersion), then a few
@@ -240,39 +240,42 @@
    */
   T.news = function () {
     if (this.ar) return [
-      ['0.2.0',
-        '136 مدينة في 43 دولة، تُختار بالمنطقة ثم الدولة ثم المدينة',
-        'لكل مدينة مذهب العصر المعتاد فيها، ويبقى تغييره ممكنًا',
-        'مع الأرقام اللاتينية، الأرقام الكبيرة بخط الإنجليزية (Marcellus)، والعدّ التنازلي ثابت في مكانه',
-        'بث مباشر من مكة المكرمة والمدينة المنورة: زر «مباشر» في الرئيسية، مع ملء الشاشة واختيار الجودة',
-        'من السعودية: إذاعة القرآن الكريم وإذاعة نداء الإسلام',
-        'لم تعد إذاعة القرآن الكريم من القاهرة ضمن المحطات',
-        'هذه الصفحة: ما الجديد في كل إصدار'],
-      ['0.1.0',
-        'أول إصدار لتلفاز LG: الصلاة القادمة والعدّ التنازلي في المحراب، ومواقيت اليوم والقبلة',
-        'الأذان في وقته فوق أي تطبيق أو مدخل HDMI',
-        'التنبيه قبل الصلاة نصًّا وصوتًا',
-        'إذاعات القرآن الكريم، وإطفاء الشاشة أثناء الاستماع',
-        'الوضع الليلي']
+      ['1.1.1',
+        'زر Home يفتح شريط تطبيقات LG كما كان',
+        'تنبيه «أوشك وقت الصلاة على الانتهاء» يوم الجمعة بصوت الظهر، بدل الصمت'],
+      ['1.1.0',
+        'يعمل وحده بلا تطبيق أفنون: له خدمته للأذان والتنبيهات',
+        'بعد انقطاع الكهرباء يُضبط الوقت خلال ثوانٍ، ولا تظهر المواقيت قبل ضبطه',
+        'الضغط المطوّل على «رجوع» أو OK يعمل مرة واحدة',
+        'في قوائم الإعدادات لا يغطّي الاختيارُ الحالي الإطارَ'],
+      ['1.0.0',
+        'أول إصدار: الشاشة الرئيسية للتلفاز، تفتح أولًا قبل HDMI',
+        'المفضلة والمزيد وكل التطبيقات بأيقوناتها، واضغط مطولًا على OK لترتيب المفضلة',
+        '192 مدينة، وطريقة وزارة الأوقاف العُمانية، وتعديل كل وقت بالدقائق',
+        'تنبيه بالصوت قبل خروج وقت الصلاة',
+        'الجمعة حتى مغربها، وزر «مباشر» يشغّل مكة المكرمة مباشرة',
+        'يتحدّث وحده من GitHub مرة في اليوم',
+        'هذه الصفحة: ما الجديد في كل إصدار']
     ];
     return [
-      ['0.2.0',
-        '136 cities in 43 countries, picked by region, then country, then city',
-        'Each city starts on its usual Asr school, which you can still change',
-        'With Latin digits in Arabic, the big numbers in the English font (Marcellus), and the countdown holds still',
-        'Live from Makkah and Madinah: the Live button on Home, with full screen and a choice of quality',
-        'From Saudi Arabia: Holy Quran Radio and Nida Al-Islam Radio',
-        "Cairo's Holy Quran Radio is no longer in the list",
-        "This page: what's new in each release"],
-      ['0.1.0',
-        'The first version for LG TVs: the next prayer and countdown in the mihrab, today\'s prayers and the Qibla',
-        'The adhan at prayer time, over any app or HDMI input',
-        'Reminders before each prayer, on screen and spoken',
-        'Quran radio, and the screen off while you listen',
-        'Night mode']
+      ['1.1.1',
+        "The Home button opens LG's app bar again, as before",
+        "On Friday, the warning before Jumu'ah's time ends says Dhuhr's line instead of nothing"],
+      ['1.1.0',
+        'Works on its own, without the Afnon app: its own service for the adhan and reminders',
+        'After a power cut the clock is set within seconds; no times are shown until it is',
+        'Holding Back or OK acts once',
+        "In Settings lists, the current choice no longer covers the focus ring"],
+      ['1.0.0',
+        'The first version: the TV\'s Home screen, first on screen before HDMI',
+        'Favourites, More and All apps with their icons; hold OK to arrange favourites',
+        "192 cities, Oman's Ministry of Awqaf method, and each time adjustable by minutes",
+        'A spoken warning before a prayer\'s time ends',
+        "Jumu'ah until its Maghrib, and the Live button plays Makkah at once",
+        'Updates itself from GitHub once a day',
+        "This page: what's new in each release"]
     ];
-  };
-  T.preview = function () { return this.ar ? 'العصر اليوم بهذه الإعدادات' : 'Asr today with these settings'; };
+  };  T.preview = function () { return this.ar ? 'العصر اليوم بهذه الإعدادات' : 'Asr today with these settings'; };
   T.location = function () { return this.ar ? 'الموقع' : 'Location'; };
   T.country = function () { return this.ar ? 'الدولة' : 'Country'; };
   T.region = function () { return this.ar ? 'المنطقة' : 'Region'; };

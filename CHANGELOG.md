@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+- Settings → What's new lists the launcher's own releases (1.0.0 to 1.1.1) instead of the Afnon app's, each
+  headed «الإصدار …» / "Version …".
+
 ## [1.1.1] - 2026-10-30
 
 ### Changed
