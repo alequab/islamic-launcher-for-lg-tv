@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+- The Home key opens LG's own Home bar again, as before 1.1.0: putting the launcher over it showed the bar for
+  a moment first. The boot script still notes in its log when the TV closes the launcher.
+
 ### Fixed
 - The warning before a prayer's time ends was silent for Jumu'ah (Friday Dhuhr), which has no recording of its
   own: it now says Dhuhr's line, since Jumu'ah's time ends at Asr too.

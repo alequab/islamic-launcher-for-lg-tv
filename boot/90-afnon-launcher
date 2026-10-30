@@ -196,17 +196,13 @@ watchApps() {
   done
 }
 
-# The Home key: the TV opens its own Home (the bar of apps that slides up) as an app. Opening the launcher
-# right then hides that bar again, so Home always brings the launcher, as on the TCL.
-watchHome() {
+# Notes in the log when the TV closes the launcher (to see what a long press of Back does). The Home key is left
+# to the TV: it opens LG's own Home bar.
+watchClose() {
   while true; do
     luna-send -i luna://com.webos.applicationManager/getAppLifeEvents '{"subscribe":true}' 2>/dev/null |
       while read -r line; do
-        case "$line" in
-          # On "foreground", not "launch": opened before the bar is up, the launcher ends up under it.
-          *'"event":"foreground"'*'"appId":"com.webos.app.home"'*) launch ;;
-          *'"event":"close"'*"\"appId\":\"$APP\""*) log "closed: $line" ;;
-        esac
+        case "$line" in *'"event":"close"'*"\"appId\":\"$APP\""*) log "closed: $line" ;; esac
       done
     sleep 5
   done
@@ -214,7 +210,7 @@ watchHome() {
 
 watch() {
   first
-  watchHome &
+  watchClose &
   valid || { log "clock not set"; clock & }
   watchApps &
   # Updates: a first look 2 minutes after the start, then every hour (update() itself keeps to once a day).

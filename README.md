@@ -68,7 +68,7 @@
    </div>
 
    ينزّل التلفاز الحزمة من حاسوبك، وقد يسألك ويندوز مرة واحدة أن تسمح لـ Node بالمرور من جدار الحماية.
-5. أطفئ التلفاز وشغّله: يفتح المشغّل أولًا. وزر **Home** في الريموت يفتحه أيضًا.
+5. أطفئ التلفاز وشغّله: يفتح المشغّل أولًا.
 
 **بعد ذلك** يتحدّث التلفاز وحده من [إصدارات هذا المستودع](https://github.com/alequab/islamic-launcher-for-lg-tv/releases)
 مرة في اليوم، ولا حاجة إلى الحاسوب.
@@ -153,7 +153,7 @@ The adhan, reminders and spoken lines come on time from the launcher's own backg
 service schedules each one with the TV's Activity Manager and opens the launcher for the call. If the TV's clock
 isn't set yet after a power cut, Home says «جارٍ ضبط الوقت…» instead of times until it is; the boot script sets
 the clock within seconds from the date of an HTTPS answer, without waiting for LG's time server. The Home button
-opens the launcher: the boot script puts LG's own Home bar back behind it as soon as it comes up.
+still opens LG's own Home bar.
 
 <a id="rooting"></a>
 ## Rooting
