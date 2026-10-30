@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+- The warning before a prayer's time ends was silent for Jumu'ah (Friday Dhuhr), which has no recording of its
+  own: it now says Dhuhr's line, since Jumu'ah's time ends at Asr too.
+
 ## [1.1.0] - 2026-10-30
 
 ### Changed

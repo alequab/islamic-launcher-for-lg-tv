@@ -321,10 +321,9 @@ async function act(ev, s, opts) {
         return;
     }
     if (ev.kind === 'end') {
-        // «أوشك وقت صلاة … على الانتهاء». In front, the page says it itself. Jumu'ah has no recording yet: silent.
-        // (ev.time is the end; prayerName looks at the prayer's own day, the same Friday for Dhuhr.)
+        // «أوشك وقت صلاة … على الانتهاء». In front, the page says it itself. Jumu'ah has no recording of its own:
+        // Dhuhr's is said, since its time ends at Asr too.
         if (pageInFront) log('end p' + ev.prayer + ': Afnon is in front, it says it');
-        else if (p.friday) log('end p' + ev.prayer + ': no Jumu\'ah recording');
         else await voice(clipName('end_', ev, false), opts);
         return;
     }
