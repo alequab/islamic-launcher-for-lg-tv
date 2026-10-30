@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-30
+
 ### Changed
 - **Standalone:** the launcher has its own service (`service/`, `tv.afnon.launcher.service`) for the adhan, the
   reminders and going back to the app or input after the call; the Afnon webOS app is no longer needed.
