@@ -2,7 +2,20 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-30
+
+The first release.
+
 ### Added
+- **Updates from GitHub releases, no server in between:** the boot script looks at this repository's latest
+  release once a day (not while the launcher is on screen), installs its .ipk when it's newer than the TV's, and
+  takes the boot script from the same release. Releases carry no adhan or voice recordings, so the TV's are kept
+  in `/var/lib/afnon-launcher/sounds` and put back after every install. `90-afnon-launcher update` checks at once.
+  `tools/release.ps1` builds the release package.
+- **A website** on GitHub Pages: a page in Arabic and English with the screenshots, and the launcher itself as a
+  live demo in the browser (`site/`; `tools/site.ps1` publishes it to the `gh-pages` branch). Screenshots in `docs/screenshots/`, rendered
+  from the browser preview (`shot=1`, `cityclock=1`), so no personal data is in them.
+- Test hooks `open=apps|radio`, `cityclock=1` and `shot=1`.
 - **From Afnon 0.7 and its TCL build:**
   - The Oman Ministry of Awqaf's method («وزارة الأوقاف والشؤون الدينية، سلطنة عُمان»): Fajr and Isha at 18°,
     5 minutes added to Dhuhr, Asr and Maghrib, fitted to the ministry's own timetable; every Omani city uses it.

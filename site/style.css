@@ -1,0 +1,44 @@
+/* Islamic Launcher's site: the launcher's own colours and fonts (the demo's), lapis and gold. */
+@font-face { font-family: 'Alexandria'; src: url(demo/fonts/alexandria_regular.ttf); font-weight: 400; }
+@font-face { font-family: 'Alexandria'; src: url(demo/fonts/alexandria_semibold.ttf); font-weight: 600; }
+@font-face { font-family: 'Amiri'; src: url(demo/fonts/amiri_bold.ttf); font-weight: 700; }
+@font-face { font-family: 'Marcellus'; src: url(demo/fonts/marcellus_regular.ttf); font-weight: 400; }
+
+:root { --lapis9: #0C1B33; --lapis8: #12264A; --lapis7: #1A3360; --gold: #D8B46A; --gold2: #F0D79C; --ink: #EFE7D6; --mist: #9FB0CC; --line: rgba(239,231,214,0.18); }
+* { box-sizing: border-box; }
+html { background: var(--lapis9); }
+body { margin: 0; color: var(--ink); font: 400 18px/1.7 Alexandria, system-ui, sans-serif;
+  background: var(--lapis9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='none' stroke='rgba(216,180,106,0.06)' stroke-width='1.5'%3E%3Crect x='28' y='28' width='40' height='40'/%3E%3Crect x='28' y='28' width='40' height='40' transform='rotate(45 48 48)'/%3E%3Cpath d='M0 48H20M76 48H96M48 0V20M48 76V96'/%3E%3C/g%3E%3C/svg%3E"); }
+a { color: var(--gold2); }
+main, .hero, .english, footer { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+h1, h2, h3 { font-family: Amiri, serif; font-weight: 700; color: var(--gold); line-height: 1.3; }
+[lang=en] h2, h1 { font-family: Marcellus, Amiri, serif; font-weight: 400; }
+h1 { font-size: clamp(36px, 7vw, 64px); margin: 8px 0 0; direction: ltr; }
+h1 span { color: var(--ink); font-size: 0.6em; }
+h2 { font-size: 36px; margin: 56px 0 16px; }
+h3 { font-size: 24px; margin: 0 0 6px; }
+.hero { text-align: center; padding-top: 40px; }
+.basmala { font-family: Amiri, serif; font-size: 26px; color: var(--gold2); margin: 0; }
+.ar-title { font-family: Amiri, serif; font-size: 28px; margin: 0; }
+.lead { max-width: 760px; margin: 16px auto 0; color: var(--ink); }
+.lead.en { color: var(--mist); font-size: 16px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0; }
+.btn { display: inline-block; padding: 12px 24px; border-radius: 999px; border: 2px solid var(--line); background: var(--lapis8); color: var(--ink); text-decoration: none; font-weight: 600; }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: var(--lapis9); }
+.btn:hover, .btn:focus { border-color: var(--gold); outline: none; }
+.tv { margin: 16px auto 0; padding: 10px; border-radius: 18px; background: #05080f; box-shadow: 0 0 0 2px var(--line); max-width: 1000px; }
+.tv img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.grid article { background: var(--lapis8); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.grid p { margin: 0; color: var(--mist); font-size: 16px; }
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.shots figure { margin: 0; }
+.shots img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); display: block; }
+figcaption { color: var(--mist); font-size: 15px; margin-top: 6px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; border: 2px solid var(--line); background: #000; }
+.frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.demo p, ol, .english p, .english ul { color: var(--mist); }
+code { background: var(--lapis8); padding: 2px 8px; border-radius: 6px; color: var(--gold2); }
+.english { border-top: 1px solid var(--line); margin-top: 56px; padding-bottom: 8px; }
+.english b { color: var(--ink); }
+footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 24px 16px 48px; color: var(--mist); font-size: 15px; text-align: center; }

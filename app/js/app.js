@@ -117,7 +117,8 @@
     rtl = ar;
     h24 = S.clock === 'system' ? tvH24() : S.clock === '24';
     city = P.cityById(S.city);
-    clock = P.clockFor(city);
+    // cityclock=1 (desktop previews and screenshots): the city's own clock even where the browser has another zone.
+    clock = launchParams().cityclock ? new P.Clock(city, false) : P.clockFor(city);
     t = new Text(ar, eastern);
     t.cityName = ar ? city.ar : city.en;
     html.lang = ar ? 'ar' : 'en';
@@ -1098,7 +1099,11 @@
     Apps.key = key;
     Apps.list = list;
     fillHomeApps();
-    if (allv.built) fillAllApps();
+    if (allv.built) {
+      fillAllApps();
+      // All apps opened before the list came: focus its first app now.
+      if (screen === allv && (!cur || !cur.classList.contains('alltile'))) focusAllTile(0);
+    }
   }
 
   /** Puts Home in step with the live video: the panel or the strip and radio card, and its words. */
@@ -2491,7 +2496,8 @@
         if (S.remindVoice) speak('before_', d.nextIndex, d.friday);
       }
     }
-    if (r.end && !dream.on && !offv.on) {
+    // After any line that is playing (the next prayer's reminder often comes at the same moment).
+    if (r.end && !dream.on && !offv.on && !Sound.kind) {
       key = r.end.prayer + ':' + r.end.time;
       if (key !== watch.ended) { watch.ended = key; speak('end_', r.end.prayer, d.friday); }
     }
@@ -2933,7 +2939,8 @@
    *   live=makkah|madinah|off         the live video on Home;  quality=<height> first;  full=1 full screen
    *   set=key:value,…                 changes saved settings (callClose:10, night:1, radioDark:15 …)
    *   locale=ar|en|system digits=eastern|western clock=12|24|system
-   *   open=day|settings               opens a screen;  keys=down,ok,back,…  presses keys 450 ms apart
+   *   open=day|settings|apps|radio    opens a screen (radio: Home's radio card);  keys=down,ok,back,…  presses keys
+   *                                   450 ms apart
    */
   function params(p, relaunch) {
     // Language, digits and clock were applied before anything was built; a relaunch starts the page again.
@@ -2955,6 +2962,8 @@
     }
     if (p.open === 'day') openDay();
     else if (p.open === 'settings') openSettings();
+    else if (p.open === 'apps') show('apps');
+    else if (p.open === 'radio') { if (screen !== home) show('home'); openRadioCard(); }
     var kind = p.test;
     if (kind === 'reminder' || kind === 'call' || kind === 'announce' || kind === 'voice') {
       luna(SVC + 'test', { kind: kind, seconds: p.seconds == null ? 8 : +p.seconds, prayer: p.prayer == null ? null : +p.prayer, clip: p.clip, mtype: p.mtype, friday: !!+p.friday }, function (r) {
@@ -3088,7 +3097,8 @@
   if (!back) displayParams(first);
   derive();
   // The desktop preview scales the 1920×1080 stage to the window; the TV is 1920×1080 already.
-  if (!window.PalmSystem && window.innerWidth && window.innerWidth !== 1920) {
+  // shot=1: a 1920×1080 screenshot as the TV shows it, unscaled.
+  if (!window.PalmSystem && !first.shot && window.innerWidth && window.innerWidth !== 1920) {
     var k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
     stage.style.transform = 'scale(' + k + ')';
     // The page is narrower than 1920 here; in Arabic it would otherwise scroll to the right end.

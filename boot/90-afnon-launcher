@@ -9,7 +9,11 @@
 #  3. Copies the apps' icons into the launcher's folder, now and whenever an app comes or goes.
 #  4. As the TV turns off, makes Afnon its "last input", so the TV opens Afnon first when it turns on again.
 #     If an HDMI input was on screen when it went off, the TV wakes to it for about a second before Afnon.
-# Install: copy to /var/lib/webosbrew/init.d/ and chmod +x (tools/setup-tv.sh does both).
+#  5. Keeps the launcher up to date from its GitHub releases (once a day; straight from GitHub, no server in
+#     between), and this script with it. The releases carry no adhan or voice recordings (they have no licence),
+#     so the launcher's sounds are kept aside and put back after every install.
+# Install: copy to /var/lib/webosbrew/init.d/ and chmod +x (tools/install-tv.ps1 does both).
+# By hand: `90-afnon-launcher update` checks for an update now.
 
 APP=tv.afnon.launcher
 PERM=/var/luna-service2-dev/client-permissions.d/$APP.app.json
@@ -86,13 +90,78 @@ bring() {
   done
 }
 
-# Icons again whenever an app is installed, updated or removed (the list's subscription says so).
+# ---------------------------------------------------------------- sounds and updates
+
+KEEP=/var/lib/afnon-launcher
+REPO=alequab/islamic-launcher-for-lg-tv
+mkdir -p $KEEP
+
+# The adhans and spoken lines live in the app's folder, which an install replaces: a copy is kept aside (when the
+# app has more of them than the copy) and put back when they are gone.
+count() { ls "$1" 2>/dev/null | wc -l; }
+sounds() {
+  [ -d $DIR ] || return
+  if [ "$(count $DIR/sounds/adhan)" -gt "$(count $KEEP/sounds/adhan)" ]; then
+    rm -rf $KEEP/sounds && cp -r $DIR/sounds $KEEP/sounds && log "sounds kept"
+  elif [ "$(count $DIR/sounds/adhan)" -eq 0 ] && [ "$(count $KEEP/sounds/adhan)" -gt 0 ]; then
+    rm -rf $DIR/sounds && cp -r $KEEP/sounds $DIR/sounds && log "sounds put back"
+  fi
+}
+sounds
+
+# Whether version $1 is newer than $2 (dotted numbers, "1.2.0" > "1.1.9").
+newer() {
+  awk -v a="$1" -v b="$2" 'BEGIN { n = split(a, x, "."); m = split(b, y, ".");
+    for (i = 1; i <= (n > m ? n : m); i++) { if ((x[i] + 0) > (y[i] + 0)) exit 0; if ((x[i] + 0) < (y[i] + 0)) exit 1 }
+    exit 1 }'
+}
+
+# The latest GitHub release, if newer than the installed launcher: its .ipk installed as Developer Mode installs
+# do, then the sounds put back, and this script from the same release. Once a day ($1 = now: at once), and not
+# while the launcher is on screen (it would restart under the viewer): then an hour later.
+update() {
+  stamp=$(date +%s)
+  if [ "$1" != now ]; then
+    [ $((stamp - $(cat $KEEP/checked 2>/dev/null || echo 0))) -lt 86400 ] && return
+    if [ "$(front)" = "$APP" ]; then echo $((stamp - 86400 + 3600)) > $KEEP/checked; return; fi
+  fi
+  echo $stamp > $KEEP/checked
+  json=$(curl -s -m 30 "https://api.github.com/repos/$REPO/releases/latest") || return
+  tag=$(echo "$json" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
+  url=$(echo "$json" | grep -o '"browser_download_url": *"[^"]*\.ipk"' | head -1 | sed 's/.*"\(https[^"]*\)"$/\1/')
+  have=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' $DIR/appinfo.json 2>/dev/null)
+  [ -n "$tag" ] && [ -n "$url" ] || { log "update: no release"; return; }
+  newer "${tag#v}" "${have:-0}" || { log "update: $have is the latest"; return; }
+  log "update: $have -> ${tag#v}"
+  sounds
+  ipk=/tmp/afnon-launcher-update.ipk
+  curl -s -m 600 -L -o $ipk "$url" || { log "update: download failed"; return; }
+  ilog=/tmp/afnon-launcher-install.log
+  luna-send -i luna://com.webos.appInstallService/dev/install \
+    "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"$ipk\",\"subscribe\":true}" > $ilog 2>&1 &
+  i=0
+  while [ $i -lt 300 ] && ! grep -q '"installed"\|"failed"\|errorText' $ilog; do sleep 1; i=$((i + 1)); done
+  kill $! 2>/dev/null
+  if grep -q '"installed"' $ilog; then log "update: installed ${tag#v}"; else log "update: install failed"; fi
+  rm -f $ipk $ilog
+  perms; icons; sounds
+  # This script from the same release, for the next boot (the watcher running now carries on as it is).
+  new=/tmp/afnon-launcher-boot
+  if curl -s -m 30 -L -o $new "https://raw.githubusercontent.com/$REPO/$tag/boot/90-afnon-launcher" &&
+     head -1 $new | grep -q '^#!/bin/sh' && sh -n $new && ! cmp -s $new "$0"; then
+    cp $new "$0" && chmod +x "$0" && log "update: boot script updated"
+  fi
+  rm -f $new
+}
+
+# Icons (and sounds and permissions) again whenever an app is installed, updated or removed (the list's
+# subscription says so).
 watchApps() {
   while true; do
     luna-send -i luna://com.webos.applicationManager/listLaunchPoints '{"subscribe":true}' 2>/dev/null |
       while read -r line; do
         # A reinstall of either app also resets its permissions.
-        case "$line" in *'"change"'*) perms; icons ;; esac
+        case "$line" in *'"change"'*) perms; icons; sounds ;; esac
       done
     sleep 5
   done
@@ -101,6 +170,8 @@ watchApps() {
 watch() {
   first
   watchApps &
+  # Updates: a first look 2 minutes after the start, then every hour (update() itself keeps to once a day).
+  ( sleep 120; while true; do update; sleep 3600; done ) &
   # Only at boot: run again by hand (a reinstall), it leaves whatever is on screen alone.
   [ "$(cut -d. -f1 /proc/uptime)" -lt 300 ] && bring
   # The power state, as it changes; "Active" (not "Active Standby") is the TV turned on with its screen.
@@ -118,6 +189,11 @@ watch() {
     sleep 5
   done
 }
+
+if [ "$1" = update ]; then
+  update now
+  exit 0
+fi
 
 if [ "$1" = watch ]; then
   echo $$ > $PID

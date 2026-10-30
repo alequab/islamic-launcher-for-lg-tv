@@ -1,6 +1,6 @@
 {
   "id": "tv.afnon.launcher",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "vendor": "Afnon",
   "type": "web",
   "main": "index.html",
