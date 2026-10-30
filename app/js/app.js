@@ -532,9 +532,13 @@
    */
   var CLIPS = ['fajr', null, 'dhuhr', 'asr', 'maghrib', 'isha'];
   var JUMUAH_CLIPS = false;
+  // The reminder before the prayer says «حان الآن» in Lutfi Khamis's voice for now (BEFORE_AS_NOW, as in the
+  // service): «اقترب موعد» exists only in the old computer voice.
+  var BEFORE_AS_NOW = true;
   function speak(kind, prayer, friday) {
     var name = CLIPS[prayer];
     if (!name || (Sound.kind && Sound.kind !== 'clip')) return;
+    if (kind === 'before_' && BEFORE_AS_NOW) kind = 'now_';
     if (JUMUAH_CLIPS && friday && prayer === DHUHR && kind !== 'end_') name = 'jumuah';
     radioA.volume = 0.3;
     playSound('sounds/announce/' + kind + name + '.wav', 'clip');

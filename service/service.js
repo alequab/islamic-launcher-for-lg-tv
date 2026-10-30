@@ -285,10 +285,14 @@ function voice(clip, opts) {
 // The Jumu'ah lines are said with Dhuhr's recordings until Jumu'ah has its own (Lutfi Khamis recorded Dhuhr's);
 // true again once before_jumuah / now_jumuah are recorded in the same voice. The page has the same switch.
 const JUMUAH_CLIPS = false;
+// The reminder before the prayer says «حان الآن موعد صلاة …» (Lutfi Khamis) for now, as the user asked: «اقترب
+// موعد صلاة …» exists only in the old computer voice. false again once before_* are recorded in his voice.
+const BEFORE_AS_NOW = true;
 
 function clipName(kind, ev, friday) {
     const base = CLIPS[ev.prayer];
     if (!base) return null;
+    if (kind === 'before_' && BEFORE_AS_NOW) kind = 'now_';
     return kind + (friday && JUMUAH_CLIPS ? 'jumuah' : base);
 }
 
