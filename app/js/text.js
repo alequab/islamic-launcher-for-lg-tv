@@ -206,6 +206,7 @@
       case 'NORTH_AMERICA': return this.ar ? 'الجمعية الإسلامية لأمريكا الشمالية' : 'ISNA, North America';
       case 'MOON_SIGHTING_COMMITTEE': return this.ar ? 'لجنة رؤية الهلال' : 'Moonsighting Committee';
       case 'SINGAPORE': return this.ar ? 'سنغافورة' : 'Singapore';
+      case 'OMAN_AWQAF': return this.ar ? 'وزارة الأوقاف والشؤون الدينية، سلطنة عُمان' : 'Ministry of Awqaf, Oman';
       default: return this.ar ? 'الهيئة المصرية العامة للمساحة' : 'Egyptian General Authority of Survey';
     }
   };
@@ -216,7 +217,11 @@
     var isha = a.interval > 0
       ? (this.ar ? 'العشاء بعد المغرب بـ ' + a.interval + ' دقيقة' : 'Isha ' + a.interval + ' min after Maghrib')
       : (this.ar ? 'العشاء ' : 'Isha ') + a.isha + '°';
-    return this.d(fajr + ' · ' + isha);
+    // The minutes a method adds to Dhuhr, Asr and Maghrib (Oman), in words before the number in Arabic, so no sign
+    // lands on the wrong side.
+    var extra = !a.plus ? '' : this.ar ? ' · الظهر والعصر والمغرب بزيادة ' + a.plus + ' دقائق'
+      : ' · Dhuhr, Asr and Maghrib +' + a.plus + ' min';
+    return this.d(fajr + ' · ' + isha + extra);
   };
 
   // Settings
@@ -304,6 +309,11 @@
   };
   T.remindVoiceRow = function () { return this.ar ? 'تذكير صوتي' : 'Spoken reminder'; };
   T.remindVoiceHelp = function () { return this.ar ? '«اقترب موعد صلاة …» مع التذكير' : 'Says «اقترب موعد صلاة …» with the reminder'; };
+  T.endRemindRow = function () { return this.ar ? 'تنبيه قبل خروج الوقت' : 'Before the time ends'; };
+  T.endRemindHelp = function () {
+    return this.ar ? '«أوشك وقت صلاة … على الانتهاء»، قبل نهاية وقت الصلاة الحالية'
+                   : "Says «أوشك وقت صلاة … على الانتهاء» before the current prayer's time ends";
+  };
   T.announceRow = function () { return this.ar ? 'إعلان دخول الوقت' : 'Announce the time'; };
   T.announceHelp = function () {
     return this.ar ? '«حان الآن موعد صلاة …» للصلاة التي أذانها متوقف' : "Says «حان الآن موعد صلاة …» when a prayer's adhan is off";

@@ -3,6 +3,18 @@
 ## [Unreleased]
 
 ### Added
+- **From Afnon 0.7 and its TCL build:**
+  - The Oman Ministry of Awqaf's method («وزارة الأوقاف والشؤون الدينية، سلطنة عُمان»): Fajr and Isha at 18°,
+    5 minutes added to Dhuhr, Asr and Maghrib, fitted to the ministry's own timetable; every Omani city uses it.
+  - 56 more cities, 192 in all: 11 more in Oman, 44 more in Indonesia (each in its own time zone: Western,
+    Central or Eastern Indonesia, since this TV keeps the city's clock) and Albany, NY. Muscat moved to where the
+    ministry's Muscat timetable matches.
+  - «أوشك وقت صلاة … على الانتهاء»: a spoken warning before the current prayer's time ends (Fajr at sunrise,
+    Dhuhr, Asr and Maghrib at the next prayer, Isha at Fajr), with its own setting, Settings → Reminders → Before
+    the time ends: 5 to 30 minutes, or off (15 by default). The page says it when in front, the service otherwise.
+    The recordings (and «حان الآن موعد صلاة …») are Lutfi Khamis's, as on the TCL; not in the repo. Jumu'ah has no
+    recording yet, so its ending is silent.
+- Test hook `at=<ISO time>`: Home's clock jumps to that moment.
 - **Settings → Adjust the times** («تعديل المواقيت», its own section), as in meypod/al-azan: Fajr, Sunrise,
   Dhuhr, Asr, Maghrib and Isha each on a row with − and + round the minutes («+2», «0», «-3»), up to 30 earlier
   or later, with today's adjusted time under the name. Home, Prayer day, the reminders and the adhan all use the
@@ -25,6 +37,12 @@
 - `tools/install-tv.ps1`: package, install over Homebrew Channel's telnet, put the boot script in place.
 
 ### Changed
+- Jumu'ah replaces Dhuhr on Friday until its Maghrib, then the strip says الظهر again (Afnon's TCL build).
+- The «مباشر» pill plays Makkah at once when nothing is on, and otherwise goes down to the buttons under the
+  panel (Full screen, the other mosque, Stop), as the TCL build does now. No list in between.
+- The arch countdown fits with ten hours or more left: in Marcellus "10:00:00" was 575 px in the 520 px arch. It
+  gets a little smaller until it fits, measured with the minutes and seconds as zeros, so its size changes at
+  most when the hour does.
 - **The call to prayer opens in the launcher,** not in the Afnon app, so the launcher's own adhan voice and call
   settings are used. Afnon's service opens whichever app names itself to it (the launcher does on every message).
   When the call closes, the TV goes back to what was on screen (an HDMI input, YouTube…): the service notes it,

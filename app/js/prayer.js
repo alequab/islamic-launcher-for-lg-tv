@@ -14,7 +14,7 @@
 
   // Prefs.METHODS order; the names are adhan-java's enum names (kept in settings, as on Android).
   var METHODS = ['EGYPTIAN', 'UMM_AL_QURA', 'MUSLIM_WORLD_LEAGUE', 'KARACHI', 'DUBAI', 'KUWAIT', 'QATAR',
-    'NORTH_AMERICA', 'MOON_SIGHTING_COMMITTEE', 'SINGAPORE'];
+    'NORTH_AMERICA', 'MOON_SIGHTING_COMMITTEE', 'SINGAPORE', 'OMAN_AWQAF'];
   var JS_NAME = {
     EGYPTIAN: 'Egyptian', UMM_AL_QURA: 'UmmAlQura', MUSLIM_WORLD_LEAGUE: 'MuslimWorldLeague', KARACHI: 'Karachi',
     DUBAI: 'Dubai', KUWAIT: 'Kuwait', QATAR: 'Qatar', NORTH_AMERICA: 'NorthAmerica',
@@ -28,6 +28,8 @@
    */
   var EG = 'EGYPTIAN', MWL = 'MUSLIM_WORLD_LEAGUE', UQ = 'UMM_AL_QURA', DU = 'DUBAI', KA = 'KARACHI',
     SGP = 'SINGAPORE', NA = 'NORTH_AMERICA', MSC = 'MOON_SIGHTING_COMMITTEE';
+  /** Oman's Ministry of Awqaf: 18° Fajr and Isha, +5 min on Dhuhr, Asr and Maghrib (Afnon 0.7's Method.OMAN_AWQAF). */
+  var OM = 'OMAN_AWQAF';
   /** Hanafi Asr (about an hour later), the usual school in Pakistan, Bangladesh and most of North India. */
   var HANAFI = 'hanafi';
   function c(id, ar, en, car, cen, lat, lng, method, zone, madhab) {
@@ -100,10 +102,22 @@
     c('sulaymaniyah', 'السليمانية', 'Sulaymaniyah', 'العراق', 'Iraq', 35.5500, 45.4333, MWL, 'IQ'),
     c('manama', 'المنامة', 'Manama', 'البحرين', 'Bahrain', 26.2167, 50.5833, MWL, 'BH'),
     c('muharraq', 'المحرق', 'Muharraq', 'البحرين', 'Bahrain', 26.2533, 50.6083, MWL, 'BH'),
-    c('muscat', 'مسقط', 'Muscat', 'عُمان', 'Oman', 23.6139, 58.5922, MWL, 'OM'),
-    c('salalah', 'صلالة', 'Salalah', 'عُمان', 'Oman', 17.0197, 54.0897, MWL, 'OM'),
-    c('sohar', 'صحار', 'Sohar', 'عُمان', 'Oman', 24.3420, 56.7299, MWL, 'OM'),
-    c('nizwa', 'نزوى', 'Nizwa', 'عُمان', 'Oman', 22.9333, 57.5333, MWL, 'OM'),
+    // Oman: the Ministry of Awqaf's method (Afnon 0.7). Muscat sits where the ministry's Muscat timetable matches.
+    c('muscat', 'مسقط', 'Muscat', 'عُمان', 'Oman', 23.6139, 58.2800, OM, 'OM'),
+    c('salalah', 'صلالة', 'Salalah', 'عُمان', 'Oman', 17.0197, 54.0897, OM, 'OM'),
+    c('sohar', 'صحار', 'Sohar', 'عُمان', 'Oman', 24.3420, 56.7299, OM, 'OM'),
+    c('nizwa', 'نزوى', 'Nizwa', 'عُمان', 'Oman', 22.9333, 57.5333, OM, 'OM'),
+    c('barka', 'بركاء', 'Barka', 'عُمان', 'Oman', 23.6807, 57.8860, OM, 'OM'),
+    c('rustaq', 'الرستاق', 'Rustaq', 'عُمان', 'Oman', 23.3908, 57.4244, OM, 'OM'),
+    c('sur', 'صور', 'Sur', 'عُمان', 'Oman', 22.5667, 59.5289, OM, 'OM'),
+    c('ibri', 'عبري', 'Ibri', 'عُمان', 'Oman', 23.2257, 56.5157, OM, 'OM'),
+    c('buraimi', 'البريمي', 'Al Buraimi', 'عُمان', 'Oman', 24.2500, 55.7933, OM, 'OM'),
+    c('khasab', 'خصب', 'Khasab', 'عُمان', 'Oman', 26.1800, 56.2400, OM, 'OM'),
+    c('duqm', 'الدقم', 'Duqm', 'عُمان', 'Oman', 19.6667, 57.7050, OM, 'OM'),
+    c('bahla', 'بهلاء', 'Bahla', 'عُمان', 'Oman', 22.9667, 57.3000, OM, 'OM'),
+    c('ibra', 'إبراء', 'Ibra', 'عُمان', 'Oman', 22.6900, 58.5300, OM, 'OM'),
+    c('samail', 'سمائل', 'Samail', 'عُمان', 'Oman', 23.3033, 57.9833, OM, 'OM'),
+    c('adam', 'أدم', 'Adam', 'عُمان', 'Oman', 22.3799, 57.5260, OM, 'OM'),
     c('sanaa', 'صنعاء', 'Sanaa', 'اليمن', 'Yemen', 15.3500, 44.2000, MWL, 'YE'),
     c('aden', 'عدن', 'Aden', 'اليمن', 'Yemen', 12.8000, 45.0333, MWL, 'YE'),
     c('taiz', 'تعز', 'Taiz', 'اليمن', 'Yemen', 13.5789, 44.0219, MWL, 'YE'),
@@ -111,6 +125,8 @@
     c('mukalla', 'المكلا', 'Mukalla', 'اليمن', 'Yemen', 14.5333, 49.1333, MWL, 'YE'),
     // United States & Canada
     c('newyork', 'نيويورك', 'New York', 'الولايات المتحدة', 'United States', 40.7128, -74.0060, NA, 'ET'),
+    // New York's times are up to 15 minutes off in Albany over the year (Afnon 0.7).
+    c('albany', 'ألباني، نيويورك', 'Albany, NY', 'الولايات المتحدة', 'United States', 42.6526, -73.7562, NA, 'ET'),
     c('chicago', 'شيكاغو', 'Chicago', 'الولايات المتحدة', 'United States', 41.8781, -87.6298, NA, 'CT'),
     c('dallas', 'دالاس', 'Dallas', 'الولايات المتحدة', 'United States', 32.7767, -96.7970, NA, 'CT'),
     c('houston', 'هيوستن', 'Houston', 'الولايات المتحدة', 'United States', 29.7604, -95.3698, NA, 'CT'),
@@ -146,10 +162,57 @@
     c('male', 'ماليه', 'Malé', 'المالديف', 'Maldives', 4.1755, 73.5093, MWL, 'MV'),
     // Southeast Asia. Indonesia, Singapore and Brunei use 20°/18°. Malaysia (JAKIM) moved Subuh to 18° in 2020;
     // Moon Sighting Committee comes within 2 minutes of e-solat for Kuala Lumpur (upstream's note, 2026-10-22).
+    // Indonesia (Afnon 0.7: the province capitals and the big cities, largest first), each in its own zone: ID
+    // Western (WIB, +7: Sumatra, Java, West and Central Kalimantan), IDC Central (WITA, +8: Bali, Nusa Tenggara,
+    // South, East and North Kalimantan, Sulawesi), IDE Eastern (WIT, +9: Maluku, Papua).
     c('jakarta', 'جاكرتا', 'Jakarta', 'إندونيسيا', 'Indonesia', -6.2088, 106.8456, SGP, 'ID'),
     c('surabaya', 'سورابايا', 'Surabaya', 'إندونيسيا', 'Indonesia', -7.2575, 112.7521, SGP, 'ID'),
+    c('bekasi', 'بيكاسي', 'Bekasi', 'إندونيسيا', 'Indonesia', -6.2383, 106.9756, SGP, 'ID'),
     c('bandung', 'باندونغ', 'Bandung', 'إندونيسيا', 'Indonesia', -6.9175, 107.6191, SGP, 'ID'),
     c('medan', 'ميدان', 'Medan', 'إندونيسيا', 'Indonesia', 3.5952, 98.6722, SGP, 'ID'),
+    c('depok', 'ديبوك', 'Depok', 'إندونيسيا', 'Indonesia', -6.4025, 106.7942, SGP, 'ID'),
+    c('tangerang', 'تانغيرانغ', 'Tangerang', 'إندونيسيا', 'Indonesia', -6.1783, 106.6319, SGP, 'ID'),
+    c('palembang', 'باليمبانغ', 'Palembang', 'إندونيسيا', 'Indonesia', -2.9761, 104.7754, SGP, 'ID'),
+    c('semarang', 'سمارانغ', 'Semarang', 'إندونيسيا', 'Indonesia', -6.9667, 110.4167, SGP, 'ID'),
+    c('makassar', 'مكاسر', 'Makassar', 'إندونيسيا', 'Indonesia', -5.1477, 119.4327, SGP, 'IDC'),
+    c('tangsel', 'جنوب تانغيرانغ', 'Tangerang Selatan', 'إندونيسيا', 'Indonesia', -6.2886, 106.7179, SGP, 'ID'),
+    c('batam', 'باتام', 'Batam', 'إندونيسيا', 'Indonesia', 1.0456, 104.0305, SGP, 'ID'),
+    c('bogor', 'بوغور', 'Bogor', 'إندونيسيا', 'Indonesia', -6.5950, 106.8166, SGP, 'ID'),
+    c('pekanbaru', 'بيكانبارو', 'Pekanbaru', 'إندونيسيا', 'Indonesia', 0.5071, 101.4478, SGP, 'ID'),
+    c('bandarlampung', 'باندار لامبونغ', 'Bandar Lampung', 'إندونيسيا', 'Indonesia', -5.4292, 105.2610, SGP, 'ID'),
+    c('padang', 'بادانغ', 'Padang', 'إندونيسيا', 'Indonesia', -0.9471, 100.4172, SGP, 'ID'),
+    c('malang', 'مالانغ', 'Malang', 'إندونيسيا', 'Indonesia', -7.9666, 112.6326, SGP, 'ID'),
+    c('samarinda', 'ساماريندا', 'Samarinda', 'إندونيسيا', 'Indonesia', -0.5022, 117.1536, SGP, 'IDC'),
+    c('denpasar', 'دينباسار', 'Denpasar', 'إندونيسيا', 'Indonesia', -8.6705, 115.2126, SGP, 'IDC'),
+    c('banjarmasin', 'بانجارماسين', 'Banjarmasin', 'إندونيسيا', 'Indonesia', -3.3186, 114.5944, SGP, 'IDC'),
+    c('serang', 'سيرانغ', 'Serang', 'إندونيسيا', 'Indonesia', -6.1200, 106.1503, SGP, 'ID'),
+    c('pontianak', 'بونتياناك', 'Pontianak', 'إندونيسيا', 'Indonesia', -0.0263, 109.3425, SGP, 'ID'),
+    c('balikpapan', 'باليكبابان', 'Balikpapan', 'إندونيسيا', 'Indonesia', -1.2379, 116.8529, SGP, 'IDC'),
+    c('jambi', 'جامبي', 'Jambi', 'إندونيسيا', 'Indonesia', -1.6101, 103.6131, SGP, 'ID'),
+    c('surakarta', 'سوراكارتا', 'Surakarta', 'إندونيسيا', 'Indonesia', -7.5755, 110.8243, SGP, 'ID'),
+    c('manado', 'مانادو', 'Manado', 'إندونيسيا', 'Indonesia', 1.4748, 124.8421, SGP, 'IDC'),
+    c('kupang', 'كوبانغ', 'Kupang', 'إندونيسيا', 'Indonesia', -10.1772, 123.6070, SGP, 'IDC'),
+    c('mataram', 'ماتارام', 'Mataram', 'إندونيسيا', 'Indonesia', -8.5833, 116.1167, SGP, 'IDC'),
+    c('yogyakarta', 'يوغياكارتا', 'Yogyakarta', 'إندونيسيا', 'Indonesia', -7.7956, 110.3695, SGP, 'ID'),
+    c('jayapura', 'جايابورا', 'Jayapura', 'إندونيسيا', 'Indonesia', -2.5337, 140.7181, SGP, 'IDE'),
+    c('bengkulu', 'بنغكولو', 'Bengkulu', 'إندونيسيا', 'Indonesia', -3.8004, 102.2655, SGP, 'ID'),
+    c('palu', 'بالو', 'Palu', 'إندونيسيا', 'Indonesia', -0.8917, 119.8707, SGP, 'IDC'),
+    c('ambon', 'أمبون', 'Ambon', 'إندونيسيا', 'Indonesia', -3.6954, 128.1814, SGP, 'IDE'),
+    c('kendari', 'كنداري', 'Kendari', 'إندونيسيا', 'Indonesia', -3.9985, 122.5130, SGP, 'IDC'),
+    c('cirebon', 'تشيريبون', 'Cirebon', 'إندونيسيا', 'Indonesia', -6.7320, 108.5523, SGP, 'ID'),
+    c('bandaaceh', 'باندا آتشيه', 'Banda Aceh', 'إندونيسيا', 'Indonesia', 5.5483, 95.3238, SGP, 'ID'),
+    c('pangkalpinang', 'بانغكال بينانغ', 'Pangkal Pinang', 'إندونيسيا', 'Indonesia', -2.1316, 106.1169, SGP, 'ID'),
+    c('tanjungpinang', 'تانجونغ بينانغ', 'Tanjung Pinang', 'إندونيسيا', 'Indonesia', 0.9186, 104.4554, SGP, 'ID'),
+    c('sorong', 'سورونغ', 'Sorong', 'إندونيسيا', 'Indonesia', -0.8762, 131.2558, SGP, 'IDE'),
+    c('palangkaraya', 'بالانغكا رايا', 'Palangka Raya', 'إندونيسيا', 'Indonesia', -2.2136, 113.9108, SGP, 'ID'),
+    c('gorontalo', 'غورونتالو', 'Gorontalo', 'إندونيسيا', 'Indonesia', 0.5435, 123.0568, SGP, 'IDC'),
+    c('ternate', 'تيرناتي', 'Ternate', 'إندونيسيا', 'Indonesia', 0.7893, 127.3842, SGP, 'IDE'),
+    c('tarakan', 'تاراكان', 'Tarakan', 'إندونيسيا', 'Indonesia', 3.3000, 117.6333, SGP, 'IDC'),
+    c('mamuju', 'ماموجو', 'Mamuju', 'إندونيسيا', 'Indonesia', -2.6748, 118.8886, SGP, 'IDC'),
+    c('manokwari', 'مانوكواري', 'Manokwari', 'إندونيسيا', 'Indonesia', -0.8615, 134.0620, SGP, 'IDE'),
+    c('merauke', 'ميراوكي', 'Merauke', 'إندونيسيا', 'Indonesia', -8.4932, 140.4018, SGP, 'IDE'),
+    c('nabire', 'نابيري', 'Nabire', 'إندونيسيا', 'Indonesia', -3.3667, 135.4833, SGP, 'IDE'),
+    c('wamena', 'وامينا', 'Wamena', 'إندونيسيا', 'Indonesia', -4.0956, 138.9481, SGP, 'IDE'),
     c('kualalumpur', 'كوالالمبور', 'Kuala Lumpur', 'ماليزيا', 'Malaysia', 3.1390, 101.6869, MSC, 'MY'),
     c('penang', 'بينانغ', 'Penang', 'ماليزيا', 'Malaysia', 5.4164, 100.3327, MSC, 'MY'),
     c('singapore', 'سنغافورة', 'Singapore', 'سنغافورة', 'Singapore', 1.3521, 103.8198, SGP, 'SG'),
@@ -227,6 +290,7 @@
     IQ: { std: 180 }, BH: { std: 180 }, OM: { std: 240 }, YE: { std: 180 },
     ET: { std: -300, dst: 'us' }, CT: { std: -360, dst: 'us' }, PT: { std: -480, dst: 'us' },
     IN: { std: 330 }, PK: { std: 300 }, BD: { std: 360 }, LK: { std: 330 }, MV: { std: 300 }, ID: { std: 420 },
+    IDC: { std: 480 }, IDE: { std: 540 },
     MY: { std: 480 }, SG: { std: 480 }, BN: { std: 480 }, TH: { std: 420 }, JP: { std: 540 }, KR: { std: 540 },
     TR: { std: 180 }, GB: { std: 0, dst: 'eu' }, CE: { std: 60, dst: 'eu' }, KE: { std: 180 }, NG: { std: 60 },
     ZA: { std: 120 }, AU: { std: 600, dst: 'australia' }, NZ: { std: 720, dst: 'newzealand' }
@@ -322,7 +386,8 @@
     'America/New_York': 'ET', 'US/Eastern': 'ET', 'America/Toronto': 'ET', 'Canada/Eastern': 'ET',
     'America/Chicago': 'CT', 'US/Central': 'CT', 'America/Los_Angeles': 'PT', 'US/Pacific': 'PT',
     'Asia/Kolkata': 'IN', 'Asia/Calcutta': 'IN', 'Asia/Karachi': 'PK', 'Asia/Dhaka': 'BD', 'Asia/Dacca': 'BD',
-    'Asia/Colombo': 'LK', 'Indian/Maldives': 'MV', 'Asia/Jakarta': 'ID', 'Asia/Kuala_Lumpur': 'MY',
+    'Asia/Colombo': 'LK', 'Indian/Maldives': 'MV', 'Asia/Jakarta': 'ID', 'Asia/Pontianak': 'ID',
+    'Asia/Makassar': 'IDC', 'Asia/Ujung_Pandang': 'IDC', 'Asia/Jayapura': 'IDE', 'Asia/Kuala_Lumpur': 'MY',
     'Asia/Singapore': 'SG', 'Singapore': 'SG', 'Asia/Brunei': 'BN', 'Asia/Bangkok': 'TH', 'Asia/Tokyo': 'JP',
     'Japan': 'JP', 'Asia/Seoul': 'KR', 'Europe/Istanbul': 'TR', 'Asia/Istanbul': 'TR', 'Turkey': 'TR',
     'Europe/London': 'GB', 'Europe/Paris': 'CE', 'Europe/Berlin': 'CE', 'Europe/Amsterdam': 'CE',
@@ -372,8 +437,13 @@
   // ---------------------------------------------------------------- calculation
 
   function params(method, madhab) {
-    var name = JS_NAME[method] || JS_NAME.EGYPTIAN;
-    var p = adhan.CalculationMethod[name]();
+    var p;
+    if (method === 'OMAN_AWQAF') {
+      // Oman's Ministry of Awqaf publishes no parameters; these were fitted to its own timetable
+      // (mara.gov.om/arabic/calendar_page1.asp): every prayer within about two minutes across 2026.
+      p = new adhan.CalculationParameters('Other', 18, 18);
+      p.methodAdjustments = { fajr: 0, sunrise: 0, dhuhr: 5, asr: 5, maghrib: 5, isha: 0 };
+    } else p = adhan.CalculationMethod[JS_NAME[method] || JS_NAME.EGYPTIAN]();
     p.madhab = madhab === 'hanafi' ? adhan.Madhab.Hanafi : adhan.Madhab.Shafi;
     // adhan-java 1.2.1 rounds every method to the nearest minute (adhan-js rounds Singapore up).
     p.rounding = adhan.Rounding.Nearest;
@@ -402,7 +472,9 @@
   /** Angles for Text.methodAngles: fajr, isha and the Isha interval in minutes (0 when by angle). */
   function angles(method) {
     var p = params(method, 'shafi');
-    return { fajr: p.fajrAngle, isha: p.ishaAngle, interval: p.ishaInterval };
+    // plus: the minutes the method adds to Dhuhr, Asr and Maghrib (Oman), else 0.
+    return { fajr: p.fajrAngle, isha: p.ishaAngle, interval: p.ishaInterval,
+      plus: (p.methodAdjustments && p.methodAdjustments.dhuhr) | 0 };
   }
 
   /**

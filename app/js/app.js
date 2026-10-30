@@ -22,7 +22,7 @@
   var APP_ID = 'tv.afnon.launcher';
   var SVG = 'http://www.w3.org/2000/svg', XLINK = 'http://www.w3.org/1999/xlink';
   var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, OK: 13, BACK: 461 };
-  var FAJR = 0, SUNRISE = 1, DHUHR = 2, ASR = 3, MAGHRIB = 4;
+  var FAJR = 0, SUNRISE = 1, DHUHR = 2, ASR = 3, MAGHRIB = 4, ISHA = 5;
   /** Minutes before a prayer when the arch switches to its approaching outline (Tokens.APPROACH_MIN). */
   var APPROACH_S = 15 * 60;
   /** How long after a prayer time the call or announcement may still happen (Reminders.CALL_WINDOW_MS). */
@@ -80,7 +80,9 @@
     bells: [1, 0, 1, 1, 1, 1], voice: 'alafasy', voiceFajr: 'chebae_fajr', station: 'nablus', radioResume: true,
     radioDark: 0, night: false, liveQuality: 480, favs: null,
     // Minutes added to Fajr, Sunrise, Dhuhr, Asr, Maghrib and Isha (Settings → Adjust the times).
-    adjust: [0, 0, 0, 0, 0, 0]
+    adjust: [0, 0, 0, 0, 0, 0],
+    // Minutes before the current prayer's time ends for «أوشك وقت صلاة … على الانتهاء»; 0 is off.
+    endRemind: 15
   };
   var S = loadSettings();
 
@@ -173,9 +175,10 @@
     return {
       times: times, nowIndex: latest === SUNRISE ? -1 : latest, nextIndex: next, nextTime: times[next],
       suhoorEnd: today[FAJR] > now ? today[FAJR] : tomorrow[FAJR],
-      // Jumu'ah is the Friday noon prayer, so it follows the calendar day; Surat al-Kahf the Hijri Friday,
+      // Jumu'ah is the Friday noon prayer: it names Dhuhr on Friday until its Maghrib, when the Hijri Saturday
+      // begins and the strip says الظهر again (Afnon's TCL build). Surat al-Kahf follows the Hijri Friday,
       // Thursday's Maghrib to Friday's.
-      friday: wall.getUTCDay() === 5, kahf: weekday === 5, weekday: weekday,
+      friday: wall.getUTCDay() === 5 && !eve, kahf: weekday === 5, weekday: weekday,
       hijriDay: h.day, hijriMonth: h.month, hijriYear: h.year, ramadan: h.month === 8,
       qibla: P.qibla(city.lat, city.lng), wall: wall
     };
@@ -367,11 +370,17 @@
     // second. It starts where the text is centred with average-width seconds, set again only when something
     // before the seconds changes: a digit that isn't changing never moves (Screen.renderCountdown).
     if (!marcellusDigits()) {
-      if (a.head !== '') { a.head = ''; a.count.style.paddingLeft = ''; }
+      if (a.head !== '') { a.head = ''; a.count.style.paddingLeft = ''; a.count.style.fontSize = ''; }
     } else {
       var head = count.slice(0, -2);
       if (head !== a.head) {
-        var px = hours ? 120 : 150, w = textWidth(head, px) + textWidth('0123456789', px) / 5;
+        // Ten hours or more ("10:00:00" is 575px at 120px) would overflow the 520px arch: a little smaller until it
+        // fits (Afnon's TCL fix). Measured with the minutes and seconds as zeros, the widest digit in Marcellus, so
+        // the size changes at most when the hour does, never every second.
+        var px = hours ? 120 : 150, zeros = textWidth(count.replace(/[0-9]{2}:[0-9]{2}$/, '00:00'), px);
+        if (zeros > 500) px = Math.floor(px * 500 / zeros);
+        a.count.style.fontSize = px === (hours ? 120 : 150) ? '' : px + 'px';
+        var w = textWidth(head, px) + textWidth('0123456789', px) / 5;
         a.count.style.paddingLeft = Math.max(0, Math.round((520 - w) / 2)) + 'px';
         // Until the font has loaded, the width is the fallback's: measure again next second.
         a.head = document.fonts && document.fonts.status !== 'loaded' ? null : head;
@@ -514,12 +523,16 @@
   });
   soundA.addEventListener('error', function () { if (Sound.kind && soundA.getAttribute('src')) soundDone(false); });
 
-  /** A spoken line (Announce.java): before_/now_ + the prayer, jumuah for Friday Dhuhr. The radio is lowered. */
+  /**
+   * A spoken line (Announce.java): before_/now_/end_ + the prayer, jumuah for Friday Dhuhr. The radio is lowered.
+   * There is no end_jumuah recording yet, so Jumu'ah's ending is silent, as on the TCL.
+   */
   var CLIPS = ['fajr', null, 'dhuhr', 'asr', 'maghrib', 'isha'];
   function speak(kind, prayer, friday) {
     var name = CLIPS[prayer];
     if (!name || (Sound.kind && Sound.kind !== 'clip')) return;
     if (friday && prayer === DHUHR) name = 'jumuah';
+    if (kind === 'end_' && name === 'jumuah') return;
     radioA.volume = 0.3;
     playSound('sounds/announce/' + kind + name + '.wav', 'clip');
   }
@@ -726,7 +739,10 @@
     el('span', 'gap', livePill);
     el('span', null, livePill, t.live());
     livePill._ok = chooseLive;
-    livePill._focus = function () { setArchFocused(false); setHints(home.hints, [t.hintOk(t.liveTitle())]); };
+    livePill._focus = function () {
+      setArchFocused(false);
+      setHints(home.hints, [t.hintOk(Live.place < 0 ? t.livePlaces()[0] : t.liveTitle())]);
+    };
     // Radio: a broadcast icon and «الإذاعة» when off; level bars and its state (gold outline) when on. OK opens its card.
     var radioPill = home.radioPill = el('div', 't pill livepill', pills);
     home.pillIcon = icon('radio', 30, 1.8);
@@ -1114,15 +1130,13 @@
     else if (Live.place >= 0) focus(home.lFull);
   }
 
-  /** The Live pill's list: Makkah, Madinah, and Stop while one is on. */
+  /**
+   * The Live pill (as Afnon's TCL build now does): with nothing on it plays Makkah at once; with a mosque on it goes
+   * down to the buttons under the panel (Full screen, the other mosque, Stop). A failed stream is tried again.
+   */
   function chooseLive() {
-    var items = t.livePlaces().slice();
-    if (Live.place >= 0) items.push(t.radioStop());
-    openChooser(t.liveTitle(), items, Live.place, function (i) {
-      if (i === 2) return liveStop();
-      if (i !== Live.place || Live.state === Live.FAILED) liveStart(i);
-      focus(home.lFull);
-    });
+    if (Live.place < 0 || Live.state === Live.FAILED) liveStart(Live.place < 0 ? 0 : Live.place);
+    focus(home.lFull);
   }
 
   /** Full screen's quality list: each rendition with what an hour costs, the one playing chosen. */
@@ -1791,6 +1805,13 @@
         } },
       { kind: TOGGLE, label: t.remindVoiceRow, help: t.remindVoiceHelp, on: function () { return S.remindVoice; },
         set: function (b) { S.remindVoice = b; changed(true); } },
+      // «أوشك وقت صلاة … على الانتهاء»: how long before the current prayer's time ends, or off.
+      { kind: VALUE, label: t.endRemindRow, help: t.endRemindHelp,
+        value: function () { return digitsOf(t.remindChoices())[idx(REMIND, S.endRemind, 2)]; },
+        open: function () {
+          openChooser(t.endRemindRow(), digitsOf(t.remindChoices()), idx(REMIND, S.endRemind, 2),
+            function (i) { S.endRemind = REMIND[i]; changed(true); });
+        } },
       { kind: TOGGLE, label: t.adhanRow, help: t.adhanHelp, on: function () { return S.adhan; },
         set: function (b) { S.adhan = b; changed(true); } },
       { kind: TOGGLE, label: t.announceRow, help: t.announceHelp, on: function () { return S.announce; },
@@ -2430,6 +2451,17 @@
       var left = Text.secondsUntil(d.nextTime, nowMs);
       r.remind = left > 0 && left <= S.remind * 60;
     }
+    // «أوشك وقت صلاة … على الانتهاء» (Afnon's TCL build), S.endRemind minutes before the current prayer's time ends
+    // (Settings → Reminders; 0 is off). Fajr ends at sunrise, Dhuhr, Asr and Maghrib at the next prayer, Isha at
+    // Fajr (before Fajr, the night's Isha is the current one).
+    if (S.endRemind > 0) {
+      var cur = d.nowIndex, end = 0;
+      if (cur === FAJR) end = d.times[SUNRISE];
+      else if (cur > SUNRISE) end = d.nextTime;
+      else if (nowMs < d.times[FAJR]) { cur = ISHA; end = d.times[FAJR]; }
+      var toEnd = end ? Text.secondsUntil(end, nowMs) : 0;
+      if (toEnd > 0 && toEnd <= S.endRemind * 60) r.end = { prayer: cur, time: end };
+    }
     return r;
   }
   function watchArm(nowMs) {
@@ -2437,6 +2469,7 @@
     if (r.call >= 0) watch.called = r.call + ':' + d.times[r.call];
     if (r.announce >= 0) watch.announced = r.announce + ':' + d.times[r.announce];
     if (r.remind) watch.reminded = d.nextIndex + ':' + d.nextTime;
+    if (r.end) watch.ended = r.end.prayer + ':' + r.end.time;
   }
   function watchTick(nowMs) {
     var r = due(nowMs), d = watch.day, key;
@@ -2457,6 +2490,10 @@
         if (screen === home) showReminder();
         if (S.remindVoice) speak('before_', d.nextIndex, d.friday);
       }
+    }
+    if (r.end && !dream.on && !offv.on) {
+      key = r.end.prayer + ':' + r.end.time;
+      if (key !== watch.ended) { watch.ended = key; speak('end_', r.end.prayer, d.friday); }
     }
   }
 
@@ -2867,6 +2904,7 @@
         app: APP_ID,
         settings: {
           city: S.city, method: method(), madhab: S.madhab, adjust: S.adjust, bells: S.bells, adhan: S.adhan, remind: S.remind,
+          endRemind: S.endRemind,
           remindVoice: S.remindVoice, announce: S.announce, ar: t.ar, eastern: t.eastern, h24: h24
         }
       }, function (r) {
@@ -2885,6 +2923,7 @@
    *                                    friday=1 with prayer=2 takes it as Jumu'ah)
    *   test=card                       Home's own reminder card at once (Android's test=reminder)
    *   test=friday|ramadan|now         Home's clock jumps to Friday 10:30, 15 Ramadan 16:30, or back
+   *   at=<ISO time>                   Home's clock jumps to that moment
    *   test=radio                      the radio on or off;  station=<id> picks a station first
    *   test=screenoff                  Home's Screen off button (radio on, panel off through the TV's remote
    *                                   connection, or the black screen); any key comes back
@@ -2931,6 +2970,13 @@
       if (screen !== home) show('home');
       showReminder();
     } else if (kind === 'friday' || kind === 'ramadan' || kind === 'now') shiftTo(kind);
+    // at=<ISO time>: Home's clock jumps there (e.g. a winter night in London, for a 12-hour countdown).
+    if (p.at && !isNaN(Date.parse(p.at))) {
+      home.shift = Date.parse(p.at) - Date.now();
+      home.day = null;
+      if (screen !== home) show('home');
+      tick(true);
+    }
     else if (kind === 'radio') radioToggle();
     else if (kind === 'lunaoff') {
       // The service's own luna route, which this firmware denies to Developer Mode apps (kept to check again).
