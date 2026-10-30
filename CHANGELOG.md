@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+- On Friday the spoken lines use Dhuhr's recordings («حان الآن موعد صلاة الظهر» in Lutfi Khamis's voice) instead
+  of the old computer voice's Jumu'ah lines, until Jumu'ah is recorded in the same voice (`JUMUAH_CLIPS`).
+
 ## [1.2.0] - 2026-10-30
 
 ### Added

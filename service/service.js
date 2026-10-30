@@ -282,10 +282,14 @@ function voice(clip, opts) {
     });
 }
 
+// The Jumu'ah lines are said with Dhuhr's recordings until Jumu'ah has its own (Lutfi Khamis recorded Dhuhr's);
+// true again once before_jumuah / now_jumuah are recorded in the same voice. The page has the same switch.
+const JUMUAH_CLIPS = false;
+
 function clipName(kind, ev, friday) {
     const base = CLIPS[ev.prayer];
     if (!base) return null;
-    return kind + (friday ? 'jumuah' : base);
+    return kind + (friday && JUMUAH_CLIPS ? 'jumuah' : base);
 }
 
 async function act(ev, s, opts) {

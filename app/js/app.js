@@ -527,13 +527,15 @@
 
   /**
    * A spoken line (Announce.java): before_/now_/end_ + the prayer, jumuah for Friday Dhuhr. The radio is lowered.
-   * There is no end_jumuah recording, so Jumu'ah's ending says Dhuhr's (its time ends at Asr too); the TCL is silent.
+   * Jumu'ah is said with Dhuhr's recordings for now (JUMUAH_CLIPS, as in the service): Lutfi Khamis recorded
+   * Dhuhr's lines, and Jumu'ah's own are still the old computer voice. There is no end_jumuah at all.
    */
   var CLIPS = ['fajr', null, 'dhuhr', 'asr', 'maghrib', 'isha'];
+  var JUMUAH_CLIPS = false;
   function speak(kind, prayer, friday) {
     var name = CLIPS[prayer];
     if (!name || (Sound.kind && Sound.kind !== 'clip')) return;
-    if (friday && prayer === DHUHR && kind !== 'end_') name = 'jumuah';
+    if (JUMUAH_CLIPS && friday && prayer === DHUHR && kind !== 'end_') name = 'jumuah';
     radioA.volume = 0.3;
     playSound('sounds/announce/' + kind + name + '.wav', 'clip');
   }
