@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-30
+
 ### Added
 - **The launcher is the TV's Home:** a stand-in is bind-mounted (in RAM) over LG's Home program, so the Home key
   and the end of every app open the launcher, with no LG bar. LG's Home comes back by itself if the stand-in isn't

@@ -244,6 +244,11 @@
    */
   T.news = function () {
     if (this.ar) return [
+      ['1.2.0',
+        'المشغّل هو الشاشة الرئيسية: زر Home يفتحه بدل شريط LG',
+        'إيقاف إعلانات LG وتتبّع المشاهدة وسجلات الإرسال، في الذاكرة فقط',
+        '«رجوع» في الرئيسية يعرض التطبيقات المفتوحة لإغلاقها',
+        'لم يعد التنبيه قبل الصلاة يضيع بعد تحديث المشغّل أو تغيير الدقائق'],
       ['1.1.1',
         'زر Home يفتح شريط تطبيقات LG كما كان',
         'تنبيه «أوشك وقت الصلاة على الانتهاء» يوم الجمعة بصوت الظهر، بدل الصمت'],
@@ -262,6 +267,11 @@
         'هذه الصفحة: ما الجديد في كل إصدار']
     ];
     return [
+      ['1.2.0',
+        "The launcher is the TV's Home: the Home button opens it instead of LG's bar",
+        "LG's ads, viewing tracking and telemetry off, in memory only",
+        'Back on Home lists the open apps to close them',
+        'The reminder before a prayer is no longer lost after an update or a change of minutes'],
       ['1.1.1',
         "The Home button opens LG's app bar again, as before",
         "On Friday, the warning before Jumu'ah's time ends says Dhuhr's line instead of nothing"],
