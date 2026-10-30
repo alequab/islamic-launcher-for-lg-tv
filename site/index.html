@@ -19,7 +19,7 @@
   <nav class="buttons">
     <a class="btn gold" href="demo/?locale=ar">جرّبه في المتصفح</a>
     <a class="btn" href="demo/?locale=en" dir="ltr">Try it in your browser</a>
-    <a class="btn" href="https://github.com/alequab/islamic-launcher-for-lg-tv#install" dir="ltr">Install · التثبيت</a>
+    <a class="btn" href="https://github.com/alequab/islamic-launcher-for-lg-tv#install-ar" dir="ltr">Install · التثبيت</a>
     <a class="btn" href="https://github.com/alequab/islamic-launcher-for-lg-tv" dir="ltr">GitHub</a>
   </nav>
   <figure class="tv"><img src="screenshots/home-ar.png" alt="الشاشة الرئيسية" width="1920" height="1080"></figure>
@@ -63,10 +63,12 @@
     <ol>
       <li>تلفاز LG بنظام webOS 5 فأحدث، بعد الروت، وعليه <a href="https://github.com/webosbrew/webos-homebrew-channel" dir="ltr">Homebrew Channel</a>
         (الروت بأداة <a href="https://github.com/throwaway96/slopbro" dir="ltr">SlopBro</a> أو ما يناسب تلفازك في <a href="https://cani.rootmy.tv" dir="ltr">cani.rootmy.tv</a>).</li>
-      <li>من حاسوب ويندوز على شبكة التلفاز: <code dir="ltr">tools\install-tv.ps1 -Tv &lt;TV IP&gt;</code></li>
-      <li>بعدها يتحدّث وحده من إصدارات المستودع، ولا يحتاج أي تطبيق آخر.</li>
+      <li>على حاسوب ويندوز في شبكة التلفاز نفسها: ثبّت <a href="https://nodejs.org">Node.js</a> ثم أدوات LG بالأمر <code dir="ltr">npm install -g @webos-tools/cli</code></li>
+      <li>نزّل <a href="https://github.com/alequab/islamic-launcher-for-lg-tv/archive/refs/heads/main.zip">المستودع</a> وفكّ ضغطه، وضع تسجيلات الأذان والعبارات في <code dir="ltr">app/sounds</code> (من <a href="https://github.com/alequab/afnon-webos">Afnon for LG webOS</a>).</li>
+      <li>اعرف عنوان التلفاز من <b>الإعدادات ← الشبكة</b>، ثم من PowerShell في مجلد المستودع: <code dir="ltr">powershell -ExecutionPolicy Bypass -File tools\install-tv.ps1 -Tv &lt;TV IP&gt;</code></li>
+      <li>أطفئ التلفاز وشغّله: يفتح المشغّل أولًا، وزر Home يفتحه أيضًا. بعدها يتحدّث وحده من إصدارات المستودع، ولا يحتاج أي تطبيق آخر.</li>
     </ol>
-    <p>التفاصيل في <a href="https://github.com/alequab/islamic-launcher-for-lg-tv#install">صفحة المشروع على GitHub</a>.</p>
+    <p>الشرح كاملًا في <a href="https://github.com/alequab/islamic-launcher-for-lg-tv#install-ar">صفحة المشروع على GitHub</a>.</p>
   </section>
 </main>
 

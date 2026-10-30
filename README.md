@@ -6,7 +6,7 @@
 
 # Islamic Launcher for LG TV: الشاشة الرئيسية الإسلامية لتلفاز LG
 
-**[جرّبه في المتصفح](https://alequab.github.io/islamic-launcher-for-lg-tv/)** · **[أحدث إصدار](https://github.com/alequab/islamic-launcher-for-lg-tv/releases/latest)** · [التثبيت](#install)
+**[جرّبه في المتصفح](https://alequab.github.io/islamic-launcher-for-lg-tv/)** · **[أحدث إصدار](https://github.com/alequab/islamic-launcher-for-lg-tv/releases/latest)** · [التثبيت](#install-ar)
 
 مبني على أفنون، ويجعله الشاشةَ الرئيسية لتلفاز LG: يفتح وحده عند تشغيل التلفاز قبل أي مدخل HDMI، وفيه الصلاة
 القادمة والعدّ التنازلي في المحراب، ومواقيت اليوم، والأذان في وقته، وإذاعات القرآن الكريم، والبث المباشر من الحرمين،
@@ -39,9 +39,44 @@
 - **يتحدّث وحده** من إصدارات هذا المستودع مرة في اليوم.
 - **لا حسابات ولا إعلانات ولا تتبّع.**
 
+<a id="install-ar"></a>
 ## التثبيت
 
-الخطوات والأوامر في قسم **Install** بالإنجليزية أدناه.
+**ما تحتاجه:**
+
+- تلفاز LG بنظام webOS 5 فأحدث، بعد الروت، وعليه [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)
+  مع تفعيل «Telnet» بصلاحيات الروت (مفعّل افتراضيًا). لعمل الروت انظر ما يناسب طراز تلفازك وإصداره في
+  [cani.rootmy.tv](https://cani.rootmy.tv)؛ وللتلفازات بنظام webOS 5 التي لا تصلها الطرق القديمة استُعملت هنا أداة
+  [SlopBro](https://github.com/throwaway96/slopbro)، وهي تثبّت Homebrew Channel. الروت على مسؤوليتك، فاتّبع تعليمات كل أداة وتحذيراتها.
+- حاسوب ويندوز على شبكة التلفاز نفسها، وعليه [Node.js](https://nodejs.org) وأدوات LG، تثبّتها بهذا الأمر:
+  `npm install -g @webos-tools/cli`
+
+**الخطوات:**
+
+1. نزّل هذا المستودع على الحاسوب (زر **Code** ثم **Download ZIP**، ثم فكّ الضغط)، وافتح PowerShell في مجلده.
+2. ضع تسجيلات الأذان في `app/sounds/adhan` والعبارات المنطوقة في `app/sounds/announce`. هي ليست في المستودع لأنها
+   بلا رخصة: في مستودع [Afnon for LG webOS](https://github.com/alequab/afnon-webos) يُنزّل الأمر `tools\fetch-adhans.ps1`
+   الأذانات، ويسجّل `tools\make-voice.ps1` العبارات؛ ثم انسخ مجلد `app\sounds` منه إلى هنا. بدونها يكون الأذان صامتًا،
+   وتبقى هذه الملفات على التلفاز مع كل تحديث.
+3. اعرف عنوان IP للتلفاز: **الإعدادات ← الشبكة** (مثل `192.168.0.10`).
+4. ثبّت التطبيق وسكربت الإقلاع بهذا الأمر، مع وضع عنوان تلفازك:
+   <div dir="ltr">
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tools\install-tv.ps1 -Tv <TV IP>
+   ```
+   </div>
+
+   ينزّل التلفاز الحزمة من حاسوبك، وقد يسألك ويندوز مرة واحدة أن تسمح لـ Node بالمرور من جدار الحماية.
+5. أطفئ التلفاز وشغّله: يفتح المشغّل أولًا. وزر **Home** في الريموت يفتحه أيضًا.
+
+**بعد ذلك** يتحدّث التلفاز وحده من [إصدارات هذا المستودع](https://github.com/alequab/islamic-launcher-for-lg-tv/releases)
+مرة في اليوم، ولا حاجة إلى الحاسوب.
+
+**إن كان عندك تطبيق أفنون القديم** (`tv.afnon.lg`) فاحذفه بعد التحديث، وإلا رُفع الأذان مرتين.
+
+**لإزالته:** احذف `/var/lib/webosbrew/init.d/90-afnon-launcher` و`/var/lib/afnon-launcher` من التلفاز، ثم احذف
+تطبيق **Islamic Launcher for LG TV**.
 
 </div>
 
@@ -104,7 +139,7 @@ Works on LG TVs with webOS 5 or newer, **rooted** with [Homebrew Channel](https:
 webOS doesn't let an app become the Home screen or list other apps, so a small boot script
 (`boot/90-afnon-launcher`, which Homebrew Channel runs at every boot) does what the app can't:
 
-1. Gives the launcher the permissions to list and open apps, read the network name and use Afnon's service, and
+1. Gives the launcher the permissions to list and open apps, read the network name and use its own service, and
    lets the service see what is on screen so the adhan can go back to it.
 2. Copies each app's icon into the launcher's folder (the TV doesn't let a web app read other apps' folders),
    again whenever an app is installed or removed.
@@ -116,8 +151,9 @@ webOS doesn't let an app become the Home screen or list other apps, so a small b
 The adhan, reminders and spoken lines come on time from the launcher's own background service
 (`service/`, from Afnon for LG webOS's): a web page can't run while it is closed or behind another app, so the
 service schedules each one with the TV's Activity Manager and opens the launcher for the call. If the TV's clock
-isn't set yet after a power cut, Home says «جارٍ ضبط الوقت…» instead of times until it is. The Home button still
-opens LG's own Home bar.
+isn't set yet after a power cut, Home says «جارٍ ضبط الوقت…» instead of times until it is; the boot script sets
+the clock within seconds from the date of an HTTPS answer, without waiting for LG's time server. The Home button
+opens the launcher: the boot script puts LG's own Home bar back behind it as soon as it comes up.
 
 <a id="rooting"></a>
 ## Rooting
