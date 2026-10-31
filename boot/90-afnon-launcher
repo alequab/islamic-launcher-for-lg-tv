@@ -161,7 +161,7 @@ update() {
     if [ "$(front)" = "$APP" ]; then echo $((stamp - 86400 + 3600)) > $KEEP/checked; return; fi
   fi
   echo $stamp > $KEEP/checked
-  json=$(curl -s -m 30 "https://api.github.com/repos/$REPO/releases/latest") || return
+  json=$(curl -s -m 30 -L "https://api.github.com/repos/$REPO/releases/latest") || return
   tag=$(echo "$json" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
   url=$(echo "$json" | grep -o '"browser_download_url": *"[^"]*\.ipk"' | head -1 | sed 's/.*"\(https[^"]*\)"$/\1/')
   have=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' $DIR/appinfo.json 2>/dev/null)
