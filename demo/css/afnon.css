@@ -1,0 +1,425 @@
+﻿/*
+ * Afnon LG. Values from afnon-mihrab/tokens.json (px at 1920×1080). Chromium 68: no flex gap, no inset, no
+ * logical properties; elements are placed by app.js from the start side. Only transform and opacity animate.
+ *
+ * Every colour is a custom property, so night mode is one class on <html> that swaps the set: nothing is
+ * rebuilt, filtered or layered, and the switch costs one style pass.
+ */
+@font-face { font-family: 'Alexandria'; src: url(../fonts/alexandria_regular.ttf); font-weight: 400; }
+@font-face { font-family: 'Alexandria'; src: url(../fonts/alexandria_medium.ttf); font-weight: 500; }
+@font-face { font-family: 'Alexandria'; src: url(../fonts/alexandria_semibold.ttf); font-weight: 600; }
+@font-face { font-family: 'Amiri'; src: url(../fonts/amiri_regular.ttf); font-weight: 400; }
+@font-face { font-family: 'Amiri'; src: url(../fonts/amiri_bold.ttf); font-weight: 700; }
+@font-face { font-family: 'Marcellus'; src: url(../fonts/marcellus_regular.ttf); font-weight: 400; }
+
+/* Day: Tokens.java. */
+:root {
+  --lapis9: #0C1B33; --lapis8: #12264A; --lapis7: #1A3360; --side: #0A1730; --callbg: #081224;
+  --gold: #D8B46A; --gold2: #F0D79C; --ink: #EFE7D6; --mist: #9FB0CC;
+  --line: rgba(239,231,214,0.25); --line-faint: rgba(239,231,214,0.1); --line-mid: rgba(239,231,214,0.5);
+  --gold60: rgba(216,180,106,0.6); --gold45: rgba(216,180,106,0.45); --past: rgba(18,38,74,0.6);
+  --scrim: rgba(12,27,51,0.92); --seg-focus: rgba(12,27,51,0.15); --bell-off: rgba(159,176,204,0.4);
+  /* FocusTile: gold-400 fill, lapis text, a plaster ring. */
+  --focus-bg: #D8B46A; --focus-fg: #0C1B33; --ring: #EFE7D6;
+  /* The current prayer and a chosen segment: plaster with lapis text. */
+  --now-bg: #EFE7D6; --now-fg: #0C1B33;
+  /* The reminder card: plaster. */
+  --card-bg: #EFE7D6; --card-fg: #0C1B33; --card-line: rgba(12,27,51,0.6); --card-btn-line: rgba(12,27,51,0.35);
+  --card-lbl: #5A4A22; --card-sub: #3D4A63;
+  /* AfnonDream and the screen-off note, on black. */
+  --dream-ink: #A69F90; --dream-dim: #7D7769; --dream-next: #B8A578; --dream-line: rgba(216,180,106,0.35);
+  /* The eight-point star lattice: one 96px tile in gold-400 at 7% (Ui.starLattice). */
+  --lattice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='none' stroke='rgba(216,180,106,0.07)' stroke-width='1.5'%3E%3Crect x='28' y='28' width='40' height='40'/%3E%3Crect x='28' y='28' width='40' height='40' transform='rotate(45 48 48)'/%3E%3Cpath d='M0 48H20M76 48H96M48 0V20M48 76V96'/%3E%3C/g%3E%3C/svg%3E");
+}
+/*
+ * Night: near-black and a little warm; text, gold and lines at about half brightness; focus a dim amber fill
+ * with light text and a clear ring instead of the bright gold.
+ */
+html.night {
+  --lapis9: #0B0A08; --lapis8: #17140F; --lapis7: #221D16; --side: #090806; --callbg: #070605;
+  --gold: #84703F; --gold2: #93835C; --ink: #8F877A; --mist: #6A655C;
+  --line: rgba(143,135,122,0.22); --line-faint: rgba(143,135,122,0.1); --line-mid: rgba(143,135,122,0.45);
+  --gold60: rgba(132,112,63,0.6); --gold45: rgba(132,112,63,0.45); --past: rgba(23,20,15,0.6);
+  --scrim: rgba(11,10,8,0.94); --seg-focus: rgba(11,10,8,0.3); --bell-off: rgba(106,101,92,0.4);
+  --focus-bg: #3A3022; --focus-fg: #CDB68A; --ring: #A8987A;
+  --now-bg: #2A241B; --now-fg: #B0A27F;
+  --card-bg: #221D16; --card-fg: #A99C80; --card-line: rgba(132,112,63,0.5); --card-btn-line: rgba(143,135,122,0.35);
+  --card-lbl: #84703F; --card-sub: #6A655C;
+  --dream-ink: #6A655C; --dream-dim: #4F4B44; --dream-next: #75684A; --dream-line: rgba(132,112,63,0.28);
+  --lattice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='none' stroke='rgba(132,112,63,0.06)' stroke-width='1.5'%3E%3Crect x='28' y='28' width='40' height='40'/%3E%3Crect x='28' y='28' width='40' height='40' transform='rotate(45 48 48)'/%3E%3Cpath d='M0 48H20M76 48H96M48 0V20M48 76V96'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html, body {
+  margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+  background: var(--lapis9); color: var(--ink);
+  font: 400 26px/1.3 Alexandria, sans-serif;
+  /* The Magic Remote's pointer stays visible (cursor: none hid it, so it seemed not to work). */
+  -webkit-user-select: none;
+}
+body { background: var(--lapis9) var(--lattice); }
+#stage { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; }
+.screen { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; display: none; }
+.screen.on { display: block; }
+.abs { position: absolute; }
+.row { display: flex; flex-direction: row; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.center { text-align: center; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+svg { display: block; overflow: visible; }
+
+/* Type */
+.ui { font-family: Alexandria, sans-serif; }
+.disp { font-family: Amiri, serif; }
+[lang=en] .disp { font-family: Marcellus, serif; }
+.dispb { font-family: Amiri, serif; font-weight: 700; }
+[lang=en] .dispb { font-family: Marcellus, serif; font-weight: 400; }
+.sacred { font-family: Amiri, serif; font-weight: 400; color: var(--gold); }
+/* Arabic with Western digits: the big numbers in Marcellus, as in English; ص/م fall back to Amiri glyph by glyph. */
+.latn .num { font-family: Marcellus, Amiri, serif; }
+[lang=en] .caps { letter-spacing: 0.2em; text-transform: uppercase; }
+.mist { color: var(--mist); }
+.gold { color: var(--gold); }
+.gold2 { color: var(--gold2); }
+.goldbg { background: var(--gold); }
+.m { font-size: 0.55em; }
+.tnum { font-feature-settings: 'tnum'; }
+/*
+ * One line, cut with "…". The clip box reaches a little above and below the line (padding, taken back by the
+ * margins), so Arabic letters that drop below it (ي ج ع) or marks above it are not cut off.
+ */
+.nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0.15em 0 0.3em; margin: -0.15em 0 -0.3em; }
+
+/* Icons: strokes on a 24 grid in the current colour, so they follow focus. */
+.ic { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.ic .fill { fill: currentColor; stroke: none; }
+[dir=rtl] .flip { transform: scaleX(-1); }
+
+/*
+ * Focus (FocusTile): gold-400 fill, lapis text, a 4px plaster ring 6px outside, scale 1.06 (rows less), 120ms.
+ * The ring is its own layer that fades; the fill switches at once.
+ */
+.t { position: absolute; box-sizing: border-box; transition: transform 120ms cubic-bezier(.2,.8,.2,1); }
+.t::after {
+  content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border: 4px solid var(--ring); border-radius: inherit; opacity: 0; pointer-events: none;
+  transition: opacity 120ms cubic-bezier(.2,.8,.2,1);
+}
+.t.f { background-color: var(--focus-bg) !important; border-color: transparent !important; color: var(--focus-fg) !important; transform: scale(1.06); }
+.t.f::after { opacity: 1; }
+.t.r4.f { transform: scale(1.04); }
+.t.r2.f { transform: scale(1.02); }
+.t.r0.f { transform: none; }
+.pill { border-radius: 36px; border: 2px solid var(--line); background: var(--lapis8); display: flex; align-items: center; justify-content: center; }
+.pill.clear { background: transparent; }
+.pill::after { border-radius: 46px; }
+
+/* ---------------------------------------------------------------- the arch (ArchView) */
+.arch path.fillp { fill: var(--lapis8); }
+.arch path.inner { fill: none; stroke: var(--gold45); stroke-width: 1.5; }
+.arch path.edge { fill: none; stroke: var(--gold); stroke-width: 3; }
+.arch.focused path.edge { stroke: var(--ink); stroke-width: 5; }
+.arch.near path.edge { stroke: var(--gold2); stroke-width: 6; }
+.verse { font-size: 32px; line-height: 1.55; direction: rtl; }
+.archinfo { width: 520px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.archinfo .lbl { font-size: 22px; line-height: 1.3; }
+.archinfo .name { font-size: 88px; line-height: 1.15; color: var(--gold); white-space: nowrap; }
+.archinfo .count { font-size: 150px; line-height: 1; height: 150px; color: var(--ink); white-space: nowrap; contain: layout paint; }
+.archinfo .count.h { font-size: 120px; line-height: 150px; }
+/* In Marcellus the countdown spans the column from a start renderCountdown sets, so it never re-centres. */
+[lang=en] .archinfo .count, .latn .archinfo .count { align-self: stretch; text-align: left; }
+.archinfo .sub { color: var(--mist); }
+.archfoot { border-radius: 36px; border: 2px solid var(--gold60); background: transparent; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.archfoot::after { border-radius: 46px; }
+.archfoot svg { width: 30px; height: 30px; }
+[dir=rtl] .archfoot svg { margin-left: 14px; margin-right: 0; }
+[dir=ltr] .archfoot svg { margin-right: 14px; }
+
+/* ---------------------------------------------------------------- Home */
+.clock { font-size: 96px; line-height: 1; white-space: nowrap; }
+.clock .m { font-size: 0.4em; }
+.cell { position: absolute; box-sizing: border-box; height: 146px; padding: 16px 20px; border-radius: 14px; background: var(--lapis8); display: flex; flex-direction: column; }
+.cell .tag { flex: 1; font-size: 20px; }
+.cell .nm { font-size: 26px; line-height: 1.1; white-space: nowrap; }
+.cell .tm { font-size: 34px; line-height: 1.1; white-space: nowrap; }
+[lang=en].h12 .cell .tm { font-size: 30px; }
+.cell.past { background: var(--past); color: var(--mist); }
+.cell.next { background: transparent; color: var(--gold); border: 3px solid var(--gold); padding: 13px 17px; }
+.cell.now { background: var(--now-bg); color: var(--now-fg); }
+.cell.next .nm, .cell.next .tm, .cell.now .nm, .cell.now .tm { font-weight: 600; }
+/* The round icon buttons at the top end: Settings and night mode. */
+.gear { width: 72px; height: 72px; border-radius: 36px; border: 2px solid var(--line); background: var(--lapis8); display: flex; align-items: center; justify-content: center; }
+.gear::after { border-radius: 46px; }
+.gear svg { width: 34px; height: 34px; }
+.hints { white-space: nowrap; font-size: 22px; color: var(--mist); }
+[dir=rtl] .hints span + span { margin-right: 40px; }
+[dir=ltr] .hints span + span { margin-left: 40px; }
+.hints span:first-child { margin: 0; }
+
+/* The header pills: Live, Radio and Wi-Fi side by side (they keep their own 20px apart). */
+.pills { display: flex; flex-direction: row; }
+.pills .t { position: relative; flex: none; }
+[dir=rtl] .pills .t + .t { margin-right: 20px; }
+[dir=ltr] .pills .t + .t { margin-left: 20px; }
+.pill.on { border-color: var(--gold60); }
+.ssid { max-width: 170px; }
+
+/* The radio card hangs from the Radio pill, over the dates and the prayer strip, while it is open. */
+.radio { box-sizing: border-box; padding: 30px 36px; border-radius: 24px; background: var(--lapis7); border: 2px solid var(--gold60); display: none; z-index: 2; }
+.radio.open { display: block; }
+/*
+ * The three buttons stay on one row: they were 3px wider than the 720px card, so Screen off wrapped below and
+ * jumped between the rows as the labels changed. Slimmer padding leaves ~40px to spare, and Play/Stop keeps the
+ * width of the longer word, so switching it moves nothing.
+ */
+.radio.pop .btns { display: flex; flex-wrap: nowrap; }
+.radio.pop .rbtn { flex: none; padding: 0 24px 0 20px; }
+.radio .plbl { display: inline-block; min-width: 3.4em; }
+.radio .title { font-size: 48px; line-height: 1.15; }
+.radio .status { font-size: 24px; color: var(--gold); }
+.radio .lbl { font-size: 20px; color: var(--mist); }
+.radio .words { margin: 0 28px; flex: 1; min-width: 0; }
+.radio .btns { margin-top: 26px; height: 68px; position: relative; }
+.radio .note { margin-top: 20px; font-size: 20px; color: var(--mist); }
+.rbtn { position: relative; display: inline-flex; align-items: center; height: 68px; box-sizing: border-box; padding: 0 32px 0 28px; border-radius: 34px; background: var(--lapis9); border: 2px solid var(--line); font-size: 24px; vertical-align: top; }
+.rbtn::after { border-radius: 44px; }
+.rbtn svg { width: 26px; height: 26px; }
+.rbtn .gap { width: 12px; }
+[dir=rtl] .rbtn + .rbtn { margin-right: 16px; }
+[dir=ltr] .rbtn + .rbtn { margin-left: 16px; }
+
+/* Home's favourites and More rows (MainActivity): a label over each, tiles in lapis, focus as everywhere. */
+.rowlbl { font-size: 22px; color: var(--mist); }
+.favtile, .moretile { border-radius: 18px; background: var(--lapis8); display: flex; flex-direction: column; }
+.favtile::after, .moretile::after { border-radius: 28px; }
+.favtile { padding: 22px 24px; }
+.favtile .nm { margin-top: auto; font-size: 30px; font-weight: 500; line-height: 1.25; }
+[lang=en] .favtile .nm { font-size: 28px; }
+/* 112px tall: a 28px icon over two lines of name (14 + 28 + 2 × 26 + 14). */
+.moretile { padding: 14px 14px; }
+.moretile .nm { margin-top: auto; font-size: 20px; line-height: 1.3; max-height: 52px; overflow: hidden; padding-bottom: 4px; margin-bottom: -4px; }
+/* All apps: a dashed outline, the label over the count. */
+.moretile.alltile { background: transparent; border: 2px dashed var(--line-mid); white-space: pre-line; padding: 16px 12px; }
+.moretile.alltile .nm { max-height: none; font-size: 21px; }
+#home.living .approw { display: none; }
+/* Until the TV's clock is set (after a power cut): no clock, dates or prayer times, which would be wrong. */
+#home.notime .when, #home.notime .cell { visibility: hidden; }
+
+/* An app's icon: the TV's picture, or its first letter on a tile. Night mode: dimmer and a little warm. */
+.appicon { flex: none; display: flex; align-items: center; justify-content: center; }
+.appicon img { width: 100%; height: 100%; object-fit: contain; }
+.appicon.mono { border-radius: 12px; background: var(--lapis7); color: var(--gold); font-weight: 600; font-size: 0.6em; }
+.favtile .appicon.mono { font-size: 26px; }
+.moretile .appicon.mono, .alltile .appicon.mono { font-size: 18px; border-radius: 8px; }
+.t.f .appicon.mono { background: var(--lapis9); }
+html.night .appicon img { filter: brightness(0.6) sepia(0.25); }
+
+/* All apps (AllAppsActivity) */
+.allhead .dispb { font-size: 64px; line-height: 72px; }
+.allhead .count { font-size: 26px; }
+[dir=rtl] .allhead .count { margin-right: 28px; }
+[dir=ltr] .allhead .count { margin-left: 28px; }
+.chip { height: 72px; padding: 0 28px; border-color: var(--gold); color: var(--gold); white-space: nowrap; }
+.chip .lbl { font-size: 26px; margin: 0 16px; }
+.chip .tm { font-size: 32px; color: var(--ink); }
+.chip.f .tm { color: inherit; }
+.allview { overflow: hidden; }
+.allgrid { position: absolute; top: 0; left: 0; width: 100%; transition: transform 200ms ease; }
+.alltile { border-radius: 18px; background: var(--lapis8); padding: 22px 24px; display: flex; flex-direction: column; }
+.alltile::after { border-radius: 28px; }
+.alltile .top { display: flex; justify-content: space-between; align-items: flex-start; }
+.alltile .top .appicon { border-radius: 14px; background: var(--lapis7); padding: 8px; box-sizing: border-box; }
+.alltile.f .top .appicon { background: var(--lapis9); }
+.alltile .star { color: var(--gold); }
+.alltile.f .star { color: inherit; }
+.alltile .nm { margin-top: auto; font-size: 26px; font-weight: 500; }
+.infobar { box-sizing: border-box; padding: 24px 32px; border-radius: 18px; background: var(--lapis8); display: flex; align-items: center; }
+.infobar .who { flex: 1; min-width: 0; }
+.infobar .name { font-size: 30px; font-weight: 500; }
+.infobar .note { font-size: 22px; margin-top: 6px; }
+
+/* Live from Makkah and Madinah: the header pill, and the panel and its bar in the strip's and radio card's place. */
+.livepill { height: 72px; padding: 0 28px 0 24px; font-size: 24px; white-space: nowrap; }
+.livepill::after { border-radius: 46px; }
+.livepill svg { width: 30px; height: 30px; }
+.livepill .gap { width: 12px; }
+.livepanel, .livebar { display: none; }
+#home.living .livepanel { display: block; }
+#home.living .livebar { display: flex; align-items: center; }
+#home.living .cell { display: none; }
+.livepanel { border-radius: 24px; overflow: hidden; background: #000; border: 2px solid var(--gold60); box-sizing: border-box; }
+.livepanel video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; }
+.livepanel .msg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--mist); }
+.livepanel.full { z-index: 1; top: 0 !important; left: 0 !important; right: 0 !important; width: 1920px !important; height: 1080px !important; border: 0; border-radius: 0; }
+.fullhint { position: absolute; left: 0; right: 0; bottom: 48px; text-align: center; font-size: 26px; color: #fff; text-shadow: 0 2px 8px #000; opacity: 0; transition: opacity 400ms; pointer-events: none; }
+.fullhint.on { opacity: 1; }
+.livebar .words { flex: 1; min-width: 0; font-size: 24px; color: var(--gold); }
+.livebar .rbtn { height: 60px; font-size: 22px; flex: none; }
+.livebar .rbtn svg { width: 24px; height: 24px; }
+
+/* Radio bars: rest as steps; playing, they breathe (scaleY only). */
+.bars { display: flex; align-items: flex-end; direction: ltr; }
+.bars i { display: block; height: 100%; border-radius: 6px; background: currentColor; transform-origin: 50% 100%; }
+.bars i + i { margin-left: 7px; }
+.bars.live i { animation: breathe 1.8s ease-in-out infinite alternate; }
+.bars.live i:nth-child(2) { animation-duration: 2.2s; animation-delay: -0.6s; }
+.bars.live i:nth-child(3) { animation-duration: 1.5s; animation-delay: -1.1s; }
+.bars.live i:nth-child(4) { animation-duration: 2.6s; animation-delay: -0.3s; }
+.bars.live i:nth-child(5) { animation-duration: 2s; animation-delay: -1.5s; }
+@keyframes breathe { from { transform: scaleY(0.2); } to { transform: scaleY(0.85); } }
+
+/* Reminder card (Home, mode "approach"). */
+.card { box-sizing: border-box; width: 680px; padding: 32px 36px; border-radius: 24px; background: var(--card-bg); border: 6px solid var(--card-line); color: var(--card-fg); }
+.card .lbl { font-size: 20px; color: var(--card-lbl); }
+.card .title { font-size: 52px; line-height: 1.15; }
+.card .sub { font-size: 24px; color: var(--card-sub); margin-top: 6px; }
+.card .btns { margin-top: 24px; height: 68px; }
+.cbtn { position: relative; display: inline-flex; align-items: center; height: 68px; box-sizing: border-box; padding: 0 32px; border-radius: 34px; font-size: 24px; vertical-align: top; }
+.cbtn::after { border-radius: 44px; }
+.cbtn.fill { background: var(--lapis9); color: var(--ink); }
+.cbtn.line { border: 2px solid var(--card-btn-line); color: var(--card-fg); }
+[dir=rtl] .cbtn + .cbtn { margin-right: 16px; }
+[dir=ltr] .cbtn + .cbtn { margin-left: 16px; }
+
+/* ---------------------------------------------------------------- Prayer day */
+.dayrow { width: 620px; height: 104px; border-radius: 16px; background: var(--lapis8); padding: 0 20px 0 28px; display: flex; align-items: center; }
+[dir=rtl] .dayrow { padding: 0 28px 0 20px; }
+.dayrow::after { border-radius: 26px; }
+.dayrow.past { background: var(--past); color: var(--mist); }
+.dayrow.now { background: var(--now-bg); color: var(--now-fg); }
+.dayrow .nm { flex: 1; font-size: 32px; }
+.dayrow.now .nm, .dayrow.f .nm { font-weight: 600; }
+.dayrow .st { font-size: 22px; opacity: 0.85; margin: 0 20px; white-space: nowrap; }
+.dayrow .tm { font-size: 40px; min-width: 120px; white-space: nowrap; text-align: end; }
+[dir=rtl] .dayrow .tm { text-align: left; }
+[dir=ltr] .dayrow .tm { text-align: right; }
+.dayrow .bell { width: 56px; height: 56px; border-radius: 28px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+[dir=rtl] .dayrow .bell { margin-right: 20px; }
+[dir=ltr] .dayrow .bell { margin-left: 20px; }
+.dayrow .bell svg { width: 26px; height: 26px; }
+.bell.on { background: var(--lapis7); color: var(--gold); }
+.dayrow.now .bell.on, .dayrow.f .bell.on { background: var(--lapis9); }
+.bell.off { border: 2px solid var(--bell-off); color: var(--mist); opacity: 0.7; }
+.dayrow.now .bell.off { color: var(--now-fg); }
+.dayrow.f .bell.off { color: var(--focus-fg); }
+.qpanel { box-sizing: border-box; width: 400px; height: 698px; padding: 28px 32px; border-radius: 24px; background: var(--lapis8); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.qpanel .lbl { align-self: stretch; font-size: 22px; color: var(--mist); }
+[dir=rtl] .qpanel .lbl { text-align: right; }
+[dir=ltr] .qpanel .lbl { text-align: left; }
+.qpanel .deg { font-size: 64px; line-height: 1; color: var(--gold); margin-top: 14px; }
+.qpanel .dir { font-size: 24px; margin-top: 14px; }
+.qpanel .hint { font-size: 20px; line-height: 1.4; color: var(--mist); margin-top: 14px; }
+.roombtn { border-radius: 32px; background: var(--lapis7); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.roombtn::after { border-radius: 42px; }
+.dial .ring { fill: var(--lapis9); stroke: var(--line); stroke-width: 2; }
+.dial .ring2 { fill: none; stroke: var(--line-faint); stroke-width: 1.5; }
+.dial .tick { stroke: var(--line-mid); stroke-width: 3; }
+.dial .n { fill: var(--ink); }
+.dial .tvn { fill: var(--mist); }
+.dial .needle { stroke: var(--gold); stroke-width: 6; stroke-linecap: round; }
+.dial .kaaba { fill: var(--gold); }
+.dial .hub { fill: var(--ink); }
+
+/* Overlays: the room picker and the list chooser, over a dimmed screen. */
+.scrim { z-index: 2; position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; background: var(--scrim); display: none; }
+.scrim.on { display: block; }
+.box { position: absolute; box-sizing: border-box; background: var(--lapis8); border-radius: 24px; border: 2px solid var(--gold60); }
+
+/* ---------------------------------------------------------------- Settings */
+#settings { background: var(--lapis9); }
+.side { position: absolute; top: 0; width: 560px; height: 1080px; background: var(--side); }
+.nav { width: 424px; height: 76px; border-radius: 14px; padding: 0 24px; display: flex; align-items: center; font-size: 26px; color: var(--mist); border: 2px solid transparent; }
+.nav::after { border-radius: 24px; }
+.nav.open { background: var(--lapis8); border-color: var(--gold); color: var(--ink); }
+.srow { width: 1184px; height: 88px; border-radius: 16px; background: var(--lapis8); padding: 0 28px; display: flex; align-items: center; }
+.srow::after { border-radius: 26px; }
+.srow .words { flex: 1; min-width: 0; }
+.srow .lb { font-size: 26px; font-weight: 500; line-height: 1.25; }
+.srow .hp { padding: 0.15em 0 0.3em; margin: -0.15em 0 -0.3em; font-size: 20px; line-height: 1.35; opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow .ctl { display: flex; align-items: center; flex: none; }
+[dir=rtl] .srow .ctl { margin-right: 24px; }
+[dir=ltr] .srow .ctl { margin-left: 24px; }
+.srow .val { font-size: 24px; white-space: nowrap; }
+.srow .chev { width: 22px; height: 22px; margin: 0 0 0 12px; }
+[dir=rtl] .srow .chev { margin: 0 12px 0 0; }
+.seg { display: flex; padding: 6px; border-radius: 30px; background: var(--lapis9); }
+.srow.f .seg { background: var(--seg-focus); }
+.seg span { display: flex; align-items: center; height: 52px; padding: 0 24px; border-radius: 26px; font-size: 22px; color: var(--mist); box-sizing: border-box; white-space: nowrap; }
+.srow.f .seg span { color: var(--focus-fg); }
+[dir=rtl] .seg span + span { margin-right: 6px; }
+[dir=ltr] .seg span + span { margin-left: 6px; }
+.seg span.on { background: var(--now-bg); color: var(--now-fg); }
+.srow.f .seg span.on { background: var(--lapis9); color: var(--ink); border: 3px solid var(--ink); padding: 0 21px; }
+.step { width: 48px; height: 48px; border-radius: 24px; background: var(--lapis7); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.stepv { min-width: 150px; text-align: center; font-size: 26px; margin: 0 18px; }
+/* A row being edited (OK on a choice or a stepper): a lapis ring round its control on the gold row. */
+.ctl.editing { border-radius: 34px; box-shadow: 0 0 0 3px var(--lapis9); padding: 6px; margin-top: -6px; margin-bottom: -6px; }
+/* ✓ Saved on Settings' hint line, for 2 s after a change. */
+.saved { font-size: 22px; font-weight: 500; color: var(--gold); opacity: 0; transition: opacity 200ms; white-space: nowrap; }
+.saved.on { opacity: 1; }
+.sw { position: relative; width: 88px; height: 48px; border-radius: 24px; background: var(--lapis7); }
+.sw i { position: absolute; top: 6px; width: 36px; height: 36px; border-radius: 18px; background: var(--mist); transition: transform 120ms cubic-bezier(.2,.8,.2,1); }
+[dir=ltr] .sw i { left: 6px; }
+[dir=rtl] .sw i { right: 6px; }
+.sw.on { background: var(--gold); }
+.sw.on i { background: var(--lapis9); }
+[dir=ltr] .sw.on i { transform: translateX(40px); }
+[dir=rtl] .sw.on i { transform: translateX(-40px); }
+.srow.f .sw.on { background: var(--lapis9); }
+.srow.f .sw.on i { background: var(--gold); }
+/* What's new: a read-only page in the rows' place; a soft gold outline while it has focus. */
+.news { box-sizing: border-box; padding: 28px 36px; border-radius: 16px; background: var(--lapis8); border: 2px solid transparent; overflow: hidden; scroll-behavior: smooth; }
+.news.f { border-color: var(--gold60); }
+.news .nhead { font-size: 26px; font-weight: 500; line-height: 1.3; }
+.news .nhead ~ .nhead { margin-top: 28px; }
+.news .nline { font-size: 24px; line-height: 1.4; margin-top: 10px; }
+.preview { box-sizing: border-box; width: 424px; height: 124px; padding: 20px 24px; border-radius: 16px; background: var(--lapis8); }
+
+/* The list chooser. */
+.chooser { width: 900px; padding: 40px 48px 32px; }
+.chooser .head { font-size: 44px; line-height: 1.2; color: var(--gold); }
+.chooser .view { position: relative; margin: 10px -10px 0; padding: 10px; overflow: hidden; }
+.chooser .list { position: relative; transition: transform 160ms cubic-bezier(.2,.8,.2,1); }
+.item { position: relative; height: 68px; border-radius: 14px; padding: 0 24px; display: flex; align-items: center; font-size: 26px; margin-bottom: 6px; }
+/* The ring sits in the 6px gap, and the focused item above its neighbours, so a chosen item below never covers it. */
+.item::after { border-radius: 20px; top: -5px; left: -5px; right: -5px; bottom: -5px; }
+.item.f { z-index: 1; }
+.item.chosen { background: var(--lapis7); color: var(--gold); font-weight: 500; }
+
+/* ---------------------------------------------------------------- screen off and the dim screen */
+.veil { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; background: #000; display: none; overflow: hidden; }
+.veil.on { display: block; }
+/* ScreenOffActivity: bars and the note, centred, fading after 6 s. */
+.offcol { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1500ms linear; }
+.offcol .bars { color: var(--dream-dim); }
+.offnote { margin-top: 20px; font-size: 24px; line-height: 1.5; color: var(--dream-ink); text-align: center; white-space: pre-line; }
+.offnote.ask { color: var(--dream-next); }
+/* AfnonDream: a 440×640 group pinned to the physical top-left and moved by transform; ink, dim and next. */
+.dgroup { position: absolute; top: 0; left: 0; width: 440px; height: 640px; transition: opacity 800ms ease; will-change: transform, opacity; }
+.dline { position: absolute; top: 0; left: 0; }
+.dline path { fill: none; stroke: var(--dream-line); stroke-width: 2; }
+.dcol { position: absolute; top: 190px; left: 20px; width: 400px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.dclock { font-size: 128px; line-height: 1; color: var(--dream-ink); white-space: nowrap; }
+.dclock .m { font-size: 0.35em; }
+.ddate { margin-top: 10px; font-size: 24px; color: var(--dream-dim); }
+.drule { width: 80px; height: 1px; margin: 28px 0 18px; background: var(--dream-line); }
+.dnext { margin-top: 10px; font-size: 28px; color: var(--dream-next); white-space: nowrap; }
+.dleft { margin-top: 10px; font-size: 24px; color: var(--dream-dim); }
+.drow { margin-top: 22px; display: flex; align-items: center; }
+.drow .bars { color: var(--dream-next); }
+.dradio { font-size: 22px; color: var(--dream-dim); white-space: nowrap; }
+[dir=rtl] .dradio { margin-right: 12px; }
+[dir=ltr] .dradio { margin-left: 12px; }
+
+/* ---------------------------------------------------------------- the call (NowActivity) */
+#now { background: var(--callbg); }
+#now .col { position: absolute; width: 640px; align-items: center; text-align: center; }
+#now .verse2 { font-size: 54px; line-height: 1.4; color: var(--gold); direction: rtl; }
+#now .lbl { font-size: 22px; color: var(--mist); margin-top: 32px; }
+#now .name { font-size: 128px; line-height: 1.1; white-space: nowrap; }
+#now .when { font-size: 64px; line-height: 1.2; color: var(--gold); white-space: nowrap; }
+#now .when .m { font-size: 0.5em; }
+.callbtn { position: relative; width: 420px; height: 76px; border-radius: 38px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 500; box-sizing: border-box; }
+.callbtn::after { border-radius: 48px; }
+.callbtn.a { background: var(--lapis8); border: 2px solid var(--line); margin-top: 36px; }
+.callbtn.b { border: 2px solid var(--line); margin-top: 18px; }
+#now .hint { font-size: 22px; color: var(--mist); margin-top: 20px; }
