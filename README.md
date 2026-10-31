@@ -17,6 +17,8 @@
 > **أفنون من إنشاء [egyjs](https://github.com/egyjs)**:
 > [egyjs/afnon-android-tv-launcher](https://github.com/egyjs/afnon-android-tv-launcher). التصميم والمزايا منه،
 > وهذا المستودع ينقلها إلى تلفازات LG بالرخصة نفسها (MIT). شكرًا لـ egyjs.
+> يتولّى [alequab](https://github.com/alequab) صيانة هذا النقل، فأبلغ عن مشكلات تلفاز LG
+> [هنا](https://github.com/alequab/islamic-launcher-for-lg-tv/issues) لا في مستودع أفنون.
 
 يعمل على تلفازات LG بنظام webOS 5 فأحدث، **بعد الروت** ([Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)،
 والروت بأداة [SlopBro](https://github.com/throwaway96/slopbro))، ولا يحتاج أي تطبيق آخر.
@@ -102,6 +104,8 @@ radio and live Makkah and Madinah, then your favourite apps, more apps and All a
 > **Afnon was created by [egyjs](https://github.com/egyjs)**:
 > [egyjs/afnon-android-tv-launcher](https://github.com/egyjs/afnon-android-tv-launcher). The design and the
 > features come from egyjs's Afnon; this repository brings them to LG TVs under the same MIT licence.
+> This port is maintained by [alequab](https://github.com/alequab): please report LG problems
+> [here](https://github.com/alequab/islamic-launcher-for-lg-tv/issues), not in Afnon's repository.
 
 Works on LG TVs with webOS 5 or newer, **rooted** with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)
 (see [Rooting](#rooting)). One app, nothing else to install.
