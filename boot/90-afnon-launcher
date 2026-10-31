@@ -200,7 +200,7 @@ STANDIN=$KEEP/home-standin
 standin() {
   cat > $STANDIN <<'EOF'
 #!/bin/sh
-# Islamic Launcher's stand-in for LG's Home program (mounted over it in RAM by 90-afnon-launcher).
+# Afnon LG's stand-in for LG's Home program (mounted over it in RAM by 90-afnon-launcher).
 APP=tv.afnon.launcher
 log() { echo "$(date +%H:%M:%S) home stand-in: $*" >> /tmp/afnon-launcher.log; }
 for p in $(pgrep -f "^/bin/sh $0"); do [ "$p" != $$ ] && kill "$p" 2>/dev/null; done

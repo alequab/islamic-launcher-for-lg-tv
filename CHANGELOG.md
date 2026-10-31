@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- **The name is now Afnon LG** (أفنون LG), as egyjs agreed in afnon-android-tv-launcher#31: the app's title on the TV, the README and the website. This is the Home-screen edition for rooted TVs; the store edition (`tv.afnon.lg`, alequab/afnon-webos) has the same name. The app id and the repository stay as they are, so updates keep coming.
 - On Friday the spoken lines use Dhuhr's recordings («حان الآن موعد صلاة الظهر» in Lutfi Khamis's voice) instead
   of the old computer voice's Jumu'ah lines, until Jumu'ah is recorded in the same voice (`JUMUAH_CLIPS`).
 - The spoken reminder before a prayer says «حان الآن موعد صلاة …» in Lutfi Khamis's voice, in place of the old

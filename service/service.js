@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Islamic Launcher's service (tv.afnon.launcher.service), from Afnon for LG webOS's tv.afnon.lg.service, so the
+ * Afnon LG's service (tv.afnon.launcher.service), from Afnon for LG webOS's tv.afnon.lg.service, so the
  * launcher needs no other app. The page can't run while it is closed or behind another app, so this schedules the
  * one next event with the TV's Activity Manager, and each event schedules the one after it:
  *   reminder  N minutes before a prayer: a system toast, and the spoken "اقترب موعد صلاة …" clip;

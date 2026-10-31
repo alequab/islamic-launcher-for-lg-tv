@@ -1,4 +1,4 @@
-# Packages Islamic Launcher (the app and its service) and installs it on a rooted LG TV (Homebrew Channel's root
+# Packages Afnon LG (the app and its service) and installs it on a rooted LG TV (Homebrew Channel's root
 # telnet on port 23), then puts the boot script in place and opens the launcher. Run from anywhere:
 #   powershell -ExecutionPolicy Bypass -File tools\install-tv.ps1 -Tv 192.168.0.102
 # Needs Node.js and ares-package (npm install -g @webos-tools/cli). The TV downloads the package from this PC,

@@ -1,1 +1,1 @@
-{ "id": "tv.afnon.launcher.service", "description": "Islamic Launcher service", "services": [ { "name": "tv.afnon.launcher.service", "description": "The adhan, reminders and spoken lines on time" } ] }
+{ "id": "tv.afnon.launcher.service", "description": "Afnon LG service", "services": [ { "name": "tv.afnon.launcher.service", "description": "The adhan, reminders and spoken lines on time" } ] }

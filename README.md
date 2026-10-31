@@ -4,7 +4,10 @@
 
 والصلاة والسلام على رسول الله، أما بعد:
 
-# Islamic Launcher for LG TV: الشاشة الرئيسية الإسلامية لتلفاز LG
+# أفنون LG · Afnon LG
+
+نسخة الشاشة الرئيسية من أفنون LG، لتلفازات LG بعد الروت. (نسخة متجر LG التي لا تحتاج روتًا في
+[alequab/afnon-webos](https://github.com/alequab/afnon-webos)، ولا تُثبَّت النسختان معًا.)
 
 **[جرّبه في المتصفح](https://alequab.github.io/islamic-launcher-for-lg-tv/)** · **[أحدث إصدار](https://github.com/alequab/islamic-launcher-for-lg-tv/releases/latest)** · [التثبيت](#install-ar)
 
@@ -62,7 +65,7 @@
 
 1. نزّل هذا المستودع على الحاسوب (زر **Code** ثم **Download ZIP**، ثم فكّ الضغط)، وافتح PowerShell في مجلده.
 2. ضع تسجيلات الأذان في `app/sounds/adhan` والعبارات المنطوقة في `app/sounds/announce`. هي ليست في المستودع لأنها
-   بلا رخصة: في مستودع [Afnon for LG webOS](https://github.com/alequab/afnon-webos) يُنزّل الأمر `tools\fetch-adhans.ps1`
+   بلا رخصة: في مستودع [Afnon LG store edition](https://github.com/alequab/afnon-webos) يُنزّل الأمر `tools\fetch-adhans.ps1`
    الأذانات، ويسجّل `tools\make-voice.ps1` العبارات؛ ثم انسخ مجلد `app\sounds` منه إلى هنا. بدونها يكون الأذان صامتًا،
    وتبقى هذه الملفات على التلفاز مع كل تحديث.
 3. اعرف عنوان IP للتلفاز: **الإعدادات ← الشبكة** (مثل `192.168.0.10`).
@@ -80,20 +83,23 @@
 **بعد ذلك** يتحدّث التلفاز وحده من [إصدارات هذا المستودع](https://github.com/alequab/islamic-launcher-for-lg-tv/releases)
 مرة في اليوم، ولا حاجة إلى الحاسوب.
 
-**إن كان عندك تطبيق أفنون القديم** (`tv.afnon.lg`) فاحذفه بعد التحديث، وإلا رُفع الأذان مرتين.
+**إن كان عندك نسخة المتجر من أفنون LG** (`tv.afnon.lg`) فاحذفها بعد التثبيت، وإلا رُفع الأذان مرتين.
 
 **لإرجاع شاشة LG الرئيسية** حتى إعادة التشغيل التالية: `/var/lib/webosbrew/init.d/90-afnon-launcher lg-home`، ولإبقائها
 دائمًا: `touch /var/lib/afnon-launcher/no-home`. ولإبقاء خدمات LG تعمل مع بقاء المشغّل شاشةً رئيسية:
 `touch /var/lib/afnon-launcher/no-debloat`.
 
 **لإزالته:** شغّل أمر `lg-home` السابق، واحذف `/var/lib/webosbrew/init.d/90-afnon-launcher` و`/var/lib/afnon-launcher`
-من التلفاز، ثم احذف تطبيق **Islamic Launcher for LG TV** وأعد تشغيل التلفاز.
+من التلفاز، ثم احذف تطبيق **Afnon LG** (`tv.afnon.launcher`) وأعد تشغيل التلفاز.
 
 </div>
 
 ---
 
-# Islamic Launcher for LG TV
+# Afnon LG
+
+The Home-screen edition of Afnon LG, for rooted LG TVs. (The LG Content Store edition, no root needed, is
+[alequab/afnon-webos](https://github.com/alequab/afnon-webos); don't install both.)
 
 **[Try it in your browser](https://alequab.github.io/islamic-launcher-for-lg-tv/)** · **[Latest release](https://github.com/alequab/islamic-launcher-for-lg-tv/releases/latest)** · [Install](#install)
 
@@ -182,7 +188,7 @@ project's own. On the TV's root shell:
 - `touch /var/lib/afnon-launcher/no-debloat`: keep the launcher as Home but leave LG's services alone.
 
 The adhan, reminders and spoken lines come on time from the launcher's own background service
-(`service/`, from Afnon for LG webOS's): a web page can't run while it is closed or behind another app, so the
+(`service/`, from the store edition's): a web page can't run while it is closed or behind another app, so the
 service schedules each one with the TV's Activity Manager and opens the launcher for the call. If the TV's clock
 isn't set yet after a power cut, Home says «جارٍ ضبط الوقت…» instead of times until it is; the boot script sets
 the clock within seconds from the date of an HTTPS answer, without waiting for LG's time server.
@@ -209,7 +215,7 @@ You need:
 Then, from this folder:
 
 1. Put the adhan recordings in `app/sounds/adhan` and the spoken lines in `app/sounds/announce`. They aren't in
-   the repo (no licence): [Afnon for LG webOS](https://github.com/alequab/afnon-webos)'s `tools\fetch-adhans.ps1`
+   the repo (no licence): [Afnon LG store edition](https://github.com/alequab/afnon-webos)'s `tools\fetch-adhans.ps1`
    downloads the adhans and its `tools\make-voice.ps1` records the lines; copy its `app\sounds` here. Without them
    the adhan is silent. Updates keep these files on the TV.
 2. Package and install, with the boot script:
@@ -222,11 +228,11 @@ From then on the TV updates itself. To check for an update at once, on the TV's 
 `/var/lib/webosbrew/init.d/90-afnon-launcher update`.
 
 To remove it: run `/var/lib/webosbrew/init.d/90-afnon-launcher lg-home`, delete
-`/var/lib/webosbrew/init.d/90-afnon-launcher` and `/var/lib/afnon-launcher` on the TV, uninstall **Islamic Launcher
-for LG TV**, and restart the TV.
+`/var/lib/webosbrew/init.d/90-afnon-launcher` and `/var/lib/afnon-launcher` on the TV, uninstall **Afnon LG**
+(`tv.afnon.launcher`), and restart the TV.
 
-**Coming from the launcher's first version,** which used the Afnon for LG webOS app's service: once the launcher is
-updated, uninstall that app (Homebrew Channel or `appInstallService/dev/remove`), or both would call the adhan.
+**If the store edition is installed too** (`tv.afnon.lg`, also called Afnon LG; the launcher's first version used
+its service): uninstall it (Homebrew Channel or `appInstallService/dev/remove`), or both would call the adhan.
 
 ## Releasing
 
@@ -260,6 +266,6 @@ site/                 the website; docs/screenshots/ its images
 
 ## Credits
 
-The same as [Afnon for LG webOS](https://github.com/alequab/afnon-webos): see [THIRD_PARTY.md](THIRD_PARTY.md).
+The same as [Afnon LG store edition](https://github.com/alequab/afnon-webos): see [THIRD_PARTY.md](THIRD_PARTY.md).
 Rules from [meypod/al-azan](https://github.com/meypod/al-azan) (Umm al-Qura in Ramadan, high latitudes, adjusting
 the times), rebuilt here. Released under the [MIT licence](LICENSE).

@@ -1,1 +1,1 @@
-{ "name": "tv.afnon.launcher.service", "version": "1.0.0", "description": "Islamic Launcher service", "main": "service.js" }
+{ "name": "tv.afnon.launcher.service", "version": "1.0.0", "description": "Afnon LG service", "main": "service.js" }
